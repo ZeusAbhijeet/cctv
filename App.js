@@ -10,6 +10,7 @@ import {useMaterial3Theme} from "@pchmn/expo-material3-theme";
 import {SafeAreaProvider} from "react-native-safe-area-context";
 import Login from "./src/screens/login";
 import PostLoginStack from "./src/navigators/postLoginStack";
+import CustomAppBar from "./src/components/CustomAppBar";
 
 const { height } = Dimensions.get("window");
 const Stack = createNativeStackNavigator();
@@ -32,6 +33,9 @@ export default function App() {
               <StatusBar style="auto" />
               <Stack.Navigator
                 initialRouteName='login'
+                screenOptions={{
+                  header: (props) => <CustomAppBar {...props} />,
+                }}
                 >
                 <Stack.Screen name='login' component={Login} options={{ headerShown: false }} />
                 <Stack.Screen name='PostLogin' component={PostLoginStack} options={{ headerShown: false }} />
