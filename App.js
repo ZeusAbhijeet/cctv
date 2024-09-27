@@ -1,21 +1,42 @@
 import { StatusBar } from 'expo-status-bar';
-import {Dimensions, StyleSheet, View} from 'react-native';
-import { PaperProvider, Text } from "react-native-paper";
+import {Dimensions, StyleSheet, useColorScheme, View} from 'react-native';
+import {MD3DarkTheme, MD3LightTheme, PaperProvider, Text} from "react-native-paper";
 import {NavigationContainer} from "@react-navigation/native";
+import { useMemo } from "react";
 
 import SlidingUpPanel from "rn-sliding-up-panel";
+import {createNativeStackNavigator} from "@react-navigation/native-stack";
+import {useMaterial3Theme} from "@pchmn/expo-material3-theme";
+import {SafeAreaProvider} from "react-native-safe-area-context";
+import Login from "./src/screens/login";
+import PostLoginStack from "./src/navigators/postLoginStack";
 
 const { height } = Dimensions.get("window");
-
+const Stack = createNativeStackNavigator();
 
 export default function App() {
+  const colorScheme = useColorScheme();
+  let { theme } = useMaterial3Theme();
+
+  const paperTheme = useMemo(
+    () =>
+      colorScheme === 'dark' ? { ...MD3DarkTheme, colors: theme.dark } : { ...MD3LightTheme, colors: theme.light },
+    [colorScheme, theme]
+  );
+
+
   return (
-      <PaperProvider>
+      <PaperProvider theme={paperTheme}>
         <NavigationContainer>
-            <View style={styles.container}>
-                <Text>Open up App.js to start working on your app!</Text>
-                <StatusBar style="auto" />
-            </View>
+            <SafeAreaProvider>
+              <StatusBar style="auto" />
+              <Stack.Navigator
+                initialRouteName='login'
+                >
+                <Stack.Screen name='login' component={Login} options={{ headerShown: false }} />
+                <Stack.Screen name='PostLogin' component={PostLoginStack} options={{ headerShown: false }} />
+              </Stack.Navigator>
+            </SafeAreaProvider>
         </NavigationContainer>
       </PaperProvider>
   );
@@ -24,7 +45,6 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
   },
