@@ -1,7 +1,12 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-import {PaperProvider} from "react-native-paper";
+import {Dimensions, StyleSheet, View} from 'react-native';
+import { PaperProvider, Text } from "react-native-paper";
 import {NavigationContainer} from "@react-navigation/native";
+
+import SlidingUpPanel from "rn-sliding-up-panel";
+
+const { height } = Dimensions.get("window");
+
 
 export default function App() {
   return (
@@ -23,4 +28,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  panel: {
+    flex: 1,
+    position: 'relative',
+  },
+  panelHeader: {
+    height: 120,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+
+
 });
