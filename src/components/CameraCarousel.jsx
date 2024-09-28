@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dimensions, Text, View } from 'react-native';
+import { Dimensions, View } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 import CameraInfoCard from './CameraInfoCard';
 
@@ -40,7 +40,7 @@ export default function CameraCarousel() {
                 data={dummyData}
                 loop={false}
                 pagingEnabled={true}
-                // scrollAnimationDuration={0}
+                scrollAnimationDuration={500}
                 onSnapToItem={(index) => console.log('current index:', index)}
                 mode='parallax'
                 renderItem={({ item }) => (

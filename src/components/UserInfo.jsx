@@ -14,7 +14,8 @@ export default function UserInfo({ title, info }) {
                 variant="labelLarge"
                 style={{
                     color: "#A9A9A9",
-                    fontWeight: "bold"
+                    fontWeight: "bold",
+                    paddingBottom: 5,
                 }}
             >{title}</Text>
             <Text

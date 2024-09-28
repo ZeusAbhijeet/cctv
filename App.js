@@ -2,9 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import {Dimensions, StyleSheet, useColorScheme, View} from 'react-native';
 import {MD3DarkTheme, MD3LightTheme, PaperProvider, Text} from "react-native-paper";
 import {NavigationContainer} from "@react-navigation/native";
-import { useMemo } from "react";
-
-import SlidingUpPanel from "rn-sliding-up-panel";
+import { useMemo, useEffect } from "react";
 import {createNativeStackNavigator} from "@react-navigation/native-stack";
 import {useMaterial3Theme} from "@pchmn/expo-material3-theme";
 import {SafeAreaProvider} from "react-native-safe-area-context";
@@ -15,6 +13,7 @@ import { setDefaults } from "react-geocode";
 
 import 'react-native-gesture-handler';
 import 'react-native-reanimated';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 
 const { height } = Dimensions.get("window");
@@ -40,8 +39,21 @@ export default function App() {
     [colorScheme, theme]
   );
 
+  // useEffect(() => {
+  //   requestLocationPermission();
+  // }, []);
+
+  // function requestLocationPermission() {
+  //   request(
+  //     PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
+  //     {title: 'Allow Fine location access', message: 'Allow for current location'}
+  //   ).then((result) => {
+  //     console.log(result);
+  //   })
+  // }
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>  
       <PaperProvider theme={paperTheme}>
         <NavigationContainer>
             <SafeAreaProvider>
@@ -58,6 +70,7 @@ export default function App() {
             </SafeAreaProvider>
         </NavigationContainer>
       </PaperProvider>
+    </GestureHandlerRootView>
   );
 }
 
