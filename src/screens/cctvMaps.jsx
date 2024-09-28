@@ -103,6 +103,122 @@ export default function CctvMaps() {
       });
   }
 
+  const fetchNearestCameraLocations = async () => {
+    const uri = "http://10.70.13.203:8080/nearby_cameras";
+
+    try {
+      const response = await axios.post(uri, {
+        latitude: region.latitude,
+        longitude: region.longitude,
+        radius_meters: selectedRadius,
+      });
+
+      if (Array.isArray(response.data)) {
+        const newCameraMarkers = response.data.map(camera => ({
+          id: camera.id,
+          coordinate: {
+            latitude: parseFloat(camera.latitude) || 0,
+            longitude: parseFloat(camera.longitude) || 0,
+          },
+          title: camera.location || "Camera",
+          description: `Owner: ${camera.owner_name || 'Unknown'}, Status: ${camera.status || 'Unknown'}`,
+          privateGovt: camera.private_govt || 'Unknown',
+          contactNo: camera.contact_no || 'Unknown',
+          coverage: camera.coverage || 'Unknown',
+          backup: camera.backup || 'Unknown',
+          connectedNetwork: camera.connected_network || 'Unknown',
+          cameraId: camera.camera_id || 'Unknown',
+          distance: camera.distance || 0,
+        }));
+
+        setCameraMarkers(newCameraMarkers);
+        return newCameraMarkers;
+      } else {
+        throw new Error('Expected array response, got ' + typeof response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching camera locations:", error);
+
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error("Response data:", error.response.data);
+        console.error("Response status:", error.response.status);
+        console.error("Response headers:", error.response.headers);
+
+        if (error.response.status === 422) {
+          ToastAndroid.show("Invalid request. Please try again.", ToastAndroid.SHORT);
+        } else {
+          ToastAndroid.show(`Server error: ${error.response.status}`, ToastAndroid.SHORT);
+        }
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error("No response received:", error.request);
+        ToastAndroid.show("No response from server", ToastAndroid.SHORT);
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error("Error setting up request:", error.message);
+        ToastAndroid.show("Error setting up request", ToastAndroid.SHORT);
+      }
+
+      Alert.alert("Error", "Error fetching camera locations:\n" + error.message);
+      throw error;
+    }
+  };
+
+
+  const focusMarker = (index) => {
+    if (mapRef.current && cameraMarkers[index]) {
+      mapRef.current.animateToRegion({
+        latitude: cameraMarkers[index].coordinate.latitude,
+        longitude: cameraMarkers[index].coordinate.longitude,
+        latitudeDelta: 0.005,
+        longitudeDelta: 0.005,
+      }, 1000);
+    }
+  };
+
+  const handleMarkerPress = (index) => {
+    setSelectedMarkerIndex(index);
+    if (carouselRef.current) {
+      carouselRef.current.scrollTo({ index: index });
+    }
+  };
+
+  const handleMapRegionChange = useCallback((newRegion) => {
+    const visibleMarkers = cameraMarkers.filter(marker =>
+      marker.coordinate.latitude >= newRegion.latitude - newRegion.latitudeDelta / 2 &&
+      marker.coordinate.latitude <= newRegion.latitude + newRegion.latitudeDelta / 2 &&
+      marker.coordinate.longitude >= newRegion.longitude - newRegion.longitudeDelta / 2 &&
+      marker.coordinate.longitude <= newRegion.longitude + newRegion.longitudeDelta / 2
+    );
+    setVisibleMarkers(visibleMarkers);
+  }, [cameraMarkers]);
+
+  const renderCarouselItem = useCallback(({ item }) => (
+    <CameraInfoCard
+      cameraLocation={item.title}
+      cameraClass={item.privateGovt}
+      cameraOwner={item.description.split(',')[0].split(': ')[1]}
+      cameraContactNo={item.contactNo}
+      cameraStatus={item.description.split(',')[1].split(': ')[1]}
+      allData={item}
+    />
+  ), []);
+
+  const memoizedMarkers = useMemo(() =>
+      visibleMarkers.map((marker, index) => (
+        <Marker
+          coordinate={marker.coordinate}
+          key={marker.id || index}
+          onPress={() => handleMarkerPress(cameraMarkers.indexOf(marker))}
+          pinColor="blue"
+        />
+      )),
+    [visibleMarkers, handleMarkerPress]
+  );
+
+
   return (
     <SafeAreaView
       style={[
@@ -166,10 +282,32 @@ export default function CctvMaps() {
           loadingEnabled={true}
           loadingIndicatorColor={theme.colors.primary}
           loadingBackgroundColor={theme.colors.background}
+          toolbarEnabled={false}
         >
-          { staticMarkers.map((item, index) => (
-            <Marker coordinate={item.coordinates} key={index} title="Test" />
-          )) }
+          {originMarker && (
+            <>
+              <Marker
+                coordinate={originMarker}
+                pinColor="red"
+                title="Origin"
+                description="Center of search radius"
+              />
+              <Circle
+                center={originMarker}
+                radius={selectedRadius}
+                strokeColor="rgba(255, 0, 0, 0.5)"
+                fillColor="rgba(255, 0, 0, 0.1)"
+              />
+            </>
+          )}
+          {cameraMarkers.map((marker, index) => (
+            <Marker
+              coordinate={marker.coordinate}
+              key={index}
+              onPress={() => handleMarkerPress(index)}
+              pinColor="blue"
+            />
+          ))}
         </MapView>
 
         <View
