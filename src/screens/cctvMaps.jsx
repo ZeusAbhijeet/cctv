@@ -271,6 +271,7 @@ export default function CctvMaps() {
       cameraOwner={item.description.split(',')[0].split(': ')[1]}
       cameraContactNo={item.contactNo}
       cameraStatus={item.description.split(',')[1].split(': ')[1]}
+      allData={item}
     />
   ), []);
 
@@ -279,8 +280,6 @@ export default function CctvMaps() {
         <Marker
           coordinate={marker.coordinate}
           key={marker.id || index}
-          title={marker.title}
-          description={marker.description}
           onPress={() => handleMarkerPress(cameraMarkers.indexOf(marker))}
           pinColor="blue"
         />
@@ -334,6 +333,7 @@ export default function CctvMaps() {
           loadingEnabled={true}
           loadingIndicatorColor={theme.colors.primary}
           loadingBackgroundColor={theme.colors.background}
+          toolbarEnabled={false}
         >
           {originMarker && (
             <>
@@ -355,8 +355,6 @@ export default function CctvMaps() {
             <Marker
               coordinate={marker.coordinate}
               key={index}
-              title={marker.title}
-              description={marker.description}
               onPress={() => handleMarkerPress(index)}
               pinColor="blue"
             />
