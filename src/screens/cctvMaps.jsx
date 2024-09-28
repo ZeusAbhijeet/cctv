@@ -8,6 +8,8 @@ import {fromAddress} from "react-geocode";
 import Geolocation from '@react-native-community/geolocation'
 import CameraInfoCard from "../components/CameraInfoCard";
 import Carousel from "react-native-reanimated-carousel";
+import axios from 'axios';
+
 
 const ITEM_HEIGHT = Dimensions.get('window').width * 0.75;
 
@@ -30,12 +32,6 @@ export default function CctvMaps() {
   useEffect(() => {
     requestLocationPermission();
   }, []);
-
-  useEffect(() => {
-    if (region != null) {
-      fetchNearestCameraLocations();
-    }
-  }, [region, selectedRadius]);
 
   useEffect(() => {
     if (cameraMarkers.length > 0 && mapRef.current) {
@@ -178,52 +174,67 @@ export default function CctvMaps() {
 
   const fetchNearestCameraLocations = async () => {
     const uri = "http://10.70.13.203:8080/nearby_cameras";
+
     try {
-      const response = await fetch(uri, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          latitude: region.latitude,
-          longitude: region.longitude,
-          radius_meters: selectedRadius,
-        }),
+      const response = await axios.post(uri, {
+        latitude: region.latitude,
+        longitude: region.longitude,
+        radius_meters: selectedRadius,
       });
 
-      if (response.status === 200) {
-        const data = await response.json();
-        const newCameraMarkers = data.map(camera => ({
+      if (Array.isArray(response.data)) {
+        const newCameraMarkers = response.data.map(camera => ({
           id: camera.id,
           coordinate: {
-            latitude: parseFloat(camera.latitude),
-            longitude: parseFloat(camera.longitude),
+            latitude: parseFloat(camera.latitude) || 0,
+            longitude: parseFloat(camera.longitude) || 0,
           },
           title: camera.location || "Camera",
-          description: `Owner: ${camera.owner_name}, Status: ${camera.status}`,
-          privateGovt: camera.private_govt,
-          contactNo: camera.contact_no,
-          coverage: camera.coverage,
-          backup: camera.backup,
-          connectedNetwork: camera.connected_network,
-          cameraId: camera.camera_id,
-          distance: camera.distance,
+          description: `Owner: ${camera.owner_name || 'Unknown'}, Status: ${camera.status || 'Unknown'}`,
+          privateGovt: camera.private_govt || 'Unknown',
+          contactNo: camera.contact_no || 'Unknown',
+          coverage: camera.coverage || 'Unknown',
+          backup: camera.backup || 'Unknown',
+          connectedNetwork: camera.connected_network || 'Unknown',
+          cameraId: camera.camera_id || 'Unknown',
+          distance: camera.distance || 0,
         }));
 
         setCameraMarkers(newCameraMarkers);
-      } else if (response.status === 422) {
-        const errorData = await response.json();
-        console.error("Validation error:", errorData.detail);
-        ToastAndroid.show("Invalid request. Please try again.", ToastAndroid.SHORT);
+        return newCameraMarkers;
       } else {
-        throw new Error('Unexpected response status: ' + response.status);
+        throw new Error('Expected array response, got ' + typeof response.data);
       }
     } catch (error) {
       console.error("Error fetching camera locations:", error);
-      Alert.alert("Error", "Error fetching camera locations:\n" + JSON.stringify(error));
-      ToastAndroid.show("Error fetching camera locations", ToastAndroid.SHORT);
+
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error("Response data:", error.response.data);
+        console.error("Response status:", error.response.status);
+        console.error("Response headers:", error.response.headers);
+
+        if (error.response.status === 422) {
+          ToastAndroid.show("Invalid request. Please try again.", ToastAndroid.SHORT);
+        } else {
+          ToastAndroid.show(`Server error: ${error.response.status}`, ToastAndroid.SHORT);
+        }
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error("No response received:", error.request);
+        ToastAndroid.show("No response from server", ToastAndroid.SHORT);
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error("Error setting up request:", error.message);
+        ToastAndroid.show("Error setting up request", ToastAndroid.SHORT);
+      }
+
+      Alert.alert("Error", "Error fetching camera locations:\n" + error.message);
+      throw error;
     }
   };
+
 
   const focusMarker = (index) => {
     if (mapRef.current && cameraMarkers[index]) {
