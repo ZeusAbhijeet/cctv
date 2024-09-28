@@ -2,7 +2,8 @@ import { StatusBar } from 'expo-status-bar';
 import {Dimensions, StyleSheet, useColorScheme, View} from 'react-native';
 import {MD3DarkTheme, MD3LightTheme, PaperProvider, Text} from "react-native-paper";
 import {NavigationContainer} from "@react-navigation/native";
-import { useMemo } from "react";
+import {useEffect, useMemo} from "react";
+import {request, PERMISSIONS} from "react-native-permissions";
 
 import SlidingUpPanel from "rn-sliding-up-panel";
 import {createNativeStackNavigator} from "@react-navigation/native-stack";
@@ -12,17 +13,11 @@ import Login from "./src/screens/login";
 import PostLoginStack from "./src/navigators/postLoginStack";
 import CustomAppBar from "./src/components/CustomAppBar";
 import { setDefaults } from "react-geocode";
-
 import 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
-
 const { height } = Dimensions.get("window");
 const Stack = createNativeStackNavigator();
-
-// import MapLibreGL from '@maplibre/maplibre-react-native';
-
-// MapLibreGL.setAccessToken(null);
 
 setDefaults({
   key: "AIzaSyBN7WeAsX5Ya5BvLY_4AKQFklaDSBIPylU",
@@ -40,6 +35,18 @@ export default function App() {
     [colorScheme, theme]
   );
 
+  useEffect(() => {
+    requestLocationPermission();
+  }, []);
+
+  function requestLocationPermission() {
+    request(
+      PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
+      {title: 'Allow Fine location access', message: 'Allow for current location'}
+    ).then((result) => {
+      console.log(result);
+    })
+  }
 
   return (
       <PaperProvider theme={paperTheme}>
@@ -47,7 +54,7 @@ export default function App() {
             <SafeAreaProvider>
               <StatusBar style="auto" />
               <Stack.Navigator
-                initialRouteName='PostLogin'
+                initialRouteName='login'
                 screenOptions={{
                   header: (props) => <CustomAppBar {...props} />,
                 }}

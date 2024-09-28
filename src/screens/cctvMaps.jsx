@@ -18,17 +18,7 @@ export default function CctvMaps() {
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
-  const radius = [
-    {name: "250m", value: 250},
-    {name: "500m", value: 500},
-    {name: "1km", value: 1000},
-    {name: "1.5km", value: 1500},
-  ]
-  const staticMarkers = [
-    { coordinates: { latitude: 15.048392, longitude: 73.985453 } },
-    { coordinates: { latitude: 15.04798, longitude: 73.985574 } },
-    { coordinates: { latitude: 15.047951, longitude: 73.985535 } },
-  ]
+
   const mapRef = useRef(null);
 
   useEffect(() => {
@@ -126,6 +116,20 @@ export default function CctvMaps() {
   //   </Card>
   // }
 
+
+  const staticMarkers = [
+    { coordinates: { latitude: 15.048392, longitude: 73.985453 } },
+    { coordinates: { latitude: 15.04798, longitude: 73.985574 } },
+    { coordinates: { latitude: 15.047951, longitude: 73.985535 } },
+  ]
+
+  const radius = [
+    {name: "250m", value: 250},
+    {name: "500m", value: 500},
+    {name: "1km", value: 1000},
+    {name: "1.5km", value: 1500},
+  ]
+
   function searchLocation() {
     fromAddress(searchQuery)
       .then(({results}) => {
@@ -150,19 +154,10 @@ export default function CctvMaps() {
         styles.container,
         {
           backgroundColor: theme.colors.background,
-          paddingHorizontal: 15,
         }
       ]
     }
     >
-      <Searchbar
-        placeholder='Search'
-        onChangeText={(text) => setSearchQuery(text)}
-        value={searchQuery}
-        style={{
-          marginVertical: 10
-        }}
-      />
       <View
         style={{
           flex: 1,
@@ -170,6 +165,7 @@ export default function CctvMaps() {
           minWidth: '100%',
           borderRadius: 15,
           alignItems: 'center',
+          justifyContent: 'center',
           marginVertical: 5,
         }}
       >
@@ -252,5 +248,5 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
-  },
+  }
 })
