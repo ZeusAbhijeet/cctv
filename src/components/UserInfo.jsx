@@ -11,7 +11,7 @@ export default function UserInfo({ title, info }) {
             }}
         >
             <Text
-                variant="lableLarge"
+                variant="labelLarge"
                 style={{
                     color: "#A9A9A9",
                     fontWeight: "bold"
