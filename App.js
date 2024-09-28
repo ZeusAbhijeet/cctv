@@ -34,7 +34,7 @@ export default function App() {
       colorScheme === 'dark' ? { ...MD3DarkTheme, colors: theme.dark } : { ...MD3LightTheme, colors: theme.light },
     [colorScheme, theme]
   );
-
+  
   useEffect(() => {
     requestLocationPermission();
   }, []);

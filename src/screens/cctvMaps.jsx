@@ -1,30 +1,57 @@
-import {Searchbar, Chip, useTheme, SegmentedButtons} from "react-native-paper";
+import {Searchbar, useTheme, SegmentedButtons} from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
-import { View, StyleSheet, Dimensions, FlatList, ToastAndroid, Platform, PermissionsAndroid } from "react-native";
+import {View, StyleSheet, Dimensions, ToastAndroid, Platform, PermissionsAndroid, Alert} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import CameraCarousel from "../components/CameraCarousel";
-import {useEffect, useRef, useState} from "react";
-import MapView, {Marker, PROVIDER_GOOGLE} from "react-native-maps";
+import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import MapView, {Circle, Marker, PROVIDER_GOOGLE} from "react-native-maps";
 import {fromAddress} from "react-geocode";
 import Geolocation from '@react-native-community/geolocation'
+import CameraInfoCard from "../components/CameraInfoCard";
+import Carousel from "react-native-reanimated-carousel";
+
+const ITEM_HEIGHT = Dimensions.get('window').width * 0.75;
+
 
 export default function CctvMaps() {
   const theme = useTheme();
   const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState("");
-  const [region, setRegion] = useState({
-    latitude: 15.048392,
-    longitude: 73.985453,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
-  });
+  const [region, setRegion] = useState(null);
   const [selectedRadius, setSelectedRadius] = useState(250);
+  const [cameraMarkers, setCameraMarkers] = useState([]);
+  const [selectedMarkerIndex, setSelectedMarkerIndex] = useState(0);
+  const [originMarker, setOriginMarker] = useState(null);
+  const [visibleMarkers, setVisibleMarkers] = useState([]);
+
 
   const mapRef = useRef(null);
+  const carouselRef = useRef(null);
 
   useEffect(() => {
     requestLocationPermission();
   }, []);
+
+  useEffect(() => {
+    if (region != null) {
+      fetchNearestCameraLocations();
+    }
+  }, [region, selectedRadius]);
+
+  useEffect(() => {
+    if (cameraMarkers.length > 0 && mapRef.current) {
+      focusMarker(selectedMarkerIndex);
+    }
+  }, [selectedMarkerIndex, cameraMarkers]);
+
+  useEffect(() => {
+    if (region != null) {
+      fetchNearestCameraLocations();
+      setOriginMarker({
+        latitude: region.latitude,
+        longitude: region.longitude,
+      });
+    }
+  }, [region, selectedRadius]);
 
   const requestLocationPermission = async () => {
     if (Platform.OS === 'ios') {
@@ -149,6 +176,108 @@ export default function CctvMaps() {
       });
   }
 
+  const fetchNearestCameraLocations = async () => {
+    const uri = "http://10.70.13.203:8080/nearby_cameras";
+    try {
+      const response = await fetch(uri, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          latitude: region.latitude,
+          longitude: region.longitude,
+          radius_meters: selectedRadius,
+        }),
+      });
+
+      if (response.status === 200) {
+        const data = await response.json();
+        const newCameraMarkers = data.map(camera => ({
+          id: camera.id,
+          coordinate: {
+            latitude: parseFloat(camera.latitude),
+            longitude: parseFloat(camera.longitude),
+          },
+          title: camera.location || "Camera",
+          description: `Owner: ${camera.owner_name}, Status: ${camera.status}`,
+          privateGovt: camera.private_govt,
+          contactNo: camera.contact_no,
+          coverage: camera.coverage,
+          backup: camera.backup,
+          connectedNetwork: camera.connected_network,
+          cameraId: camera.camera_id,
+          distance: camera.distance,
+        }));
+
+        setCameraMarkers(newCameraMarkers);
+      } else if (response.status === 422) {
+        const errorData = await response.json();
+        console.error("Validation error:", errorData.detail);
+        ToastAndroid.show("Invalid request. Please try again.", ToastAndroid.SHORT);
+      } else {
+        throw new Error('Unexpected response status: ' + response.status);
+      }
+    } catch (error) {
+      console.error("Error fetching camera locations:", error);
+      Alert.alert("Error", "Error fetching camera locations:\n" + JSON.stringify(error));
+      ToastAndroid.show("Error fetching camera locations", ToastAndroid.SHORT);
+    }
+  };
+
+  const focusMarker = (index) => {
+    if (mapRef.current && cameraMarkers[index]) {
+      mapRef.current.animateToRegion({
+        latitude: cameraMarkers[index].coordinate.latitude,
+        longitude: cameraMarkers[index].coordinate.longitude,
+        latitudeDelta: 0.005,
+        longitudeDelta: 0.005,
+      }, 1000);
+    }
+  };
+
+  const handleMarkerPress = (index) => {
+    setSelectedMarkerIndex(index);
+    if (carouselRef.current) {
+      carouselRef.current.scrollTo({ index: index });
+    }
+  };
+
+  const handleMapRegionChange = useCallback((newRegion) => {
+    const visibleMarkers = cameraMarkers.filter(marker =>
+      marker.coordinate.latitude >= newRegion.latitude - newRegion.latitudeDelta / 2 &&
+      marker.coordinate.latitude <= newRegion.latitude + newRegion.latitudeDelta / 2 &&
+      marker.coordinate.longitude >= newRegion.longitude - newRegion.longitudeDelta / 2 &&
+      marker.coordinate.longitude <= newRegion.longitude + newRegion.longitudeDelta / 2
+    );
+    setVisibleMarkers(visibleMarkers);
+  }, [cameraMarkers]);
+
+  const renderCarouselItem = useCallback(({ item }) => (
+    <CameraInfoCard
+      cameraLocation={item.title}
+      cameraClass={item.privateGovt}
+      cameraOwner={item.description.split(',')[0].split(': ')[1]}
+      cameraContactNo={item.contactNo}
+      cameraStatus={item.description.split(',')[1].split(': ')[1]}
+    />
+  ), []);
+
+  const memoizedMarkers = useMemo(() =>
+      visibleMarkers.map((marker, index) => (
+        <Marker
+          coordinate={marker.coordinate}
+          key={marker.id || index}
+          title={marker.title}
+          description={marker.description}
+          onPress={() => handleMarkerPress(cameraMarkers.indexOf(marker))}
+          pinColor="blue"
+        />
+      )),
+    [visibleMarkers, handleMarkerPress]
+  );
+
+
   return (
     <SafeAreaView
       style={[
@@ -174,56 +303,73 @@ export default function CctvMaps() {
           placeholder='Search'
           onChangeText={(text) => setSearchQuery(text)}
           value={searchQuery}
-          style={{
-            marginHorizontal: 10,
-            marginVertical: 10,
-          }}
+          style={styles.searchbar}
           onSubmitEditing={searchLocation}
         />
         <SegmentedButtons
           value={selectedRadius}
           onValueChange={setSelectedRadius}
           buttons={radius}
-          style={{
-            marginBottom: 15,
-            marginHorizontal: 10,
-          }}
+          style={styles.segmentedButtons}
         />
         <MapView
           ref={mapRef}
           provider={PROVIDER_GOOGLE}
           initialRegion={region}
           region={region}
-          style={{
-            flex: 1,
-            alignSelf: 'stretch',
-            borderRadius: 15
-          }}
+          style={styles.map}
           userInterfaceStyle={theme.dark ? 'dark' : 'light'}
           showsUserLocation={true}
           loadingEnabled={true}
           loadingIndicatorColor={theme.colors.primary}
           loadingBackgroundColor={theme.colors.background}
         >
-          { staticMarkers.map((item, index) => (
-            <Marker coordinate={item.coordinates} key={index} title="Test" />
-          )) }
+          {originMarker && (
+            <>
+              <Marker
+                coordinate={originMarker}
+                pinColor="red"
+                title="Origin"
+                description="Center of search radius"
+              />
+              <Circle
+                center={originMarker}
+                radius={selectedRadius}
+                strokeColor="rgba(255, 0, 0, 0.5)"
+                fillColor="rgba(255, 0, 0, 0.1)"
+              />
+            </>
+          )}
+          {cameraMarkers.map((marker, index) => (
+            <Marker
+              coordinate={marker.coordinate}
+              key={index}
+              title={marker.title}
+              description={marker.description}
+              onPress={() => handleMarkerPress(index)}
+              pinColor="blue"
+            />
+          ))}
         </MapView>
 
         <View
-          style={{
-            opacity: 100,
-            borderRadius: 15,
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'absolute',
-            bottom: 0,
-            height: 250,
-            minWidth: '95%',
-            marginHorizontal: 10
-          }}
+          style={styles.carouselContainer}
         >
-          <CameraCarousel />
+          <Carousel
+            ref={carouselRef}
+            data={cameraMarkers}
+            renderItem={renderCarouselItem}
+            width={Dimensions.get('window').width}
+            height={ITEM_HEIGHT}
+            loop={false}
+            pagingEnabled={true}
+            onSnapToItem={setSelectedMarkerIndex}
+            mode='parallax'
+            windowSize={5}
+            initialNumToRender={5}
+            maxToRenderPerBatch={5}
+            removeClippedSubviews={true}
+          />
         </View>
       </View>
     </SafeAreaView>
@@ -233,7 +379,30 @@ export default function CctvMaps() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  content: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
-  }
-})
+  },
+  searchbar: {
+    marginHorizontal: 10,
+    marginVertical: 10,
+  },
+  segmentedButtons: {
+    marginBottom: 15,
+    marginHorizontal: 10,
+  },
+  map: {
+    flex: 1,
+    alignSelf: 'stretch',
+    borderRadius: 15,
+  },
+  carouselContainer: {
+    position: 'absolute',
+    bottom: 0,
+    height: 250,
+    width: '95%',
+    marginHorizontal: 10,
+  },
+});

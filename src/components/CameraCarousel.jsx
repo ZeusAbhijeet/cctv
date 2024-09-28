@@ -44,7 +44,13 @@ export default function CameraCarousel() {
                 onSnapToItem={(index) => console.log('current index:', index)}
                 mode='parallax'
                 renderItem={({ item }) => (
-                    <CameraInfoCard cameraLocation={item.location} cameraClass={item.private_govt} cameraOwner={item.owner} cameraContactNo={item.contact} cameraStatus={item.status} />
+                    <CameraInfoCard
+                      cameraLocation={item.location}
+                      cameraClass={item.private_govt}
+                      cameraOwner={item.owner}
+                      cameraContactNo={item.contact}
+                      cameraStatus={item.status}
+                    />
                 )}
             />
         </View>
