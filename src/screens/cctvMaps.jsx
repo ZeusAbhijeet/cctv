@@ -4,11 +4,86 @@ import { View, StyleSheet, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
 import CameraCarousel from "./components/CameraCarousel";
+import {Chip, Searchbar, Text, useTheme} from "react-native-paper";
+import {useNavigation} from "@react-navigation/native";
+import {
+  View,
+  StyleSheet,
+  TextInput,
+  ScrollView,
+  FlatList,
+  ToastAndroid,
+  Platform,
+  PermissionsAndroid
+} from "react-native";
+import {SafeAreaView} from "react-native-safe-area-context";
+import {useEffect, useRef, useState} from "react";
+import MapView, {Marker} from "react-native-maps";
+import {fromAddress} from "react-geocode";
+import Geolocation from '@react-native-community/geolocation'
 
 export default function CctvMaps() {
   const theme = useTheme();
   const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState("");
+  const [region, setRegion] = useState({
+    latitude: 15.048392,
+    longitude: 73.985453,
+    latitudeDelta: 0.0922,
+    longitudeDelta: 0.0421,
+  });
+  const mapRef = useRef(null);
+
+  useEffect(() => {
+    requestLocationPermission();
+  }, []);
+
+  const requestLocationPermission = async () => {
+    if (Platform.OS === 'ios') {
+      getOneTimeLocation();
+    } else {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'Location Access Required',
+            message: 'This app needs to access your location',
+          },
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          getOneTimeLocation();
+        } else {
+          ToastAndroid.show('Permission Denied', ToastAndroid.SHORT);
+        }
+      } catch (err) {
+        console.warn(err);
+      }
+    }
+  };
+
+  const getOneTimeLocation = () => {
+    Geolocation.getCurrentPosition(
+      (position) => {
+        const currentLongitude = position.coords.longitude;
+        const currentLatitude = position.coords.latitude;
+        setRegion({
+          latitude: currentLatitude,
+          longitude: currentLongitude,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        });
+      },
+      (error) => {
+        ToastAndroid.show(error.message, ToastAndroid.SHORT);
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 30000,
+        maximumAge: 1000
+      },
+    );
+  };
+
   const dummyData = [
     {
       id: 1,
@@ -54,6 +129,24 @@ export default function CctvMaps() {
   //   </Card>
   // }
 
+  function searchLocation() {
+    fromAddress(searchQuery)
+      .then(({results}) => {
+        let newRegion = {
+          latitude: results[0].geometry.location.lat,
+          longitude: results[0].geometry.location.lng,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        }
+        setRegion(newRegion);
+        mapRef.current.animateToRegion(newRegion, 1000);
+      })
+      .catch(error => {
+        console.error("Error in geocoding:", error);
+        ToastAndroid.show("Error finding location", ToastAndroid.SHORT);
+      });
+  }
+
   return (
     <SafeAreaView
       style={[
@@ -63,7 +156,7 @@ export default function CctvMaps() {
           paddingHorizontal: 15,
         }
       ]
-      }
+    }
     >
       <Searchbar
         placeholder='Search'
@@ -75,44 +168,83 @@ export default function CctvMaps() {
       />
       <View
         style={{
-          flex: 0.6,
-          backgroundColor: theme.colors.secondaryContainer,
+          flex: 1,
+          backgroundColor: theme.colors.background,
           minWidth: '100%',
           borderRadius: 15,
           alignItems: 'center',
           marginVertical: 5,
         }}
       >
-        <Text>Map View</Text>
-      </View>
-      {/* <View
-        style={{
-          flex: 0.4,
-          backgroundColor: theme.colors.secondaryContainer,
-          minWidth: '100%',
-          borderRadius: 15,
-          alignItems: 'center',
-          marginVertical: 5,
-          padding: 10
-        }}
-      >
-      </View> */}
-      <View
-        style={{
-          flex: 0.4,
-          backgroundColor: theme.colors.secondaryContainer,
-          minWidth: "100%",
-          marginTop: 5,
-          marginBottom: 10,
-          alignSelf: "center",
-          marginRight: 30,
-          marginLeft: 30,
-          borderRadius: 15,
+        <Searchbar
+          placeholder='Search'
+          onChangeText={(text) => setSearchQuery(text)}
+          value={searchQuery}
+          style={{
+            marginHorizontal: 10,
+            marginVertical: 10,
+          }}
+          onSubmitEditing={searchLocation}
+        />
+        <FlatList
+          horizontal={true}
+          style={{marginLeft: 15, maxHeight: 40}}
+          data={radius}
+          renderItem={({item, index}) => {
+            return (
+              <Chip
+                key={index}
+                mode='outlined'
+                height={30}
+                style={{backgroundColor: theme.colors.background}}
+                onPress={() => {ToastAndroid.show("Radius selected: " + item.value, ToastAndroid.SHORT)}}
+                showSelectedCheck={true}
+              >
+                {item.name}
+              </Chip>
+            )
+          }}
+          ItemSeparatorComponent={() => {
+            return (
+              <View style={{minWidth: 5, maxHeight: 5}} />
+            )
+          }}
+        ></FlatList>
+        <MapView
+          ref={mapRef}
+          initialRegion={region}
+          region={region}
+          style={{
+            flex: 1,
+            alignSelf: 'stretch',
+            borderRadius: 15
+          }}
+          userInterfaceStyle={theme.dark ? 'dark' : 'light'}
+          showsUserLocation={true}
+          loadingEnabled={true}
+          loadingIndicatorColor={theme.colors.primary}
+          loadingBackgroundColor={theme.colors.background}
+        >
+          { staticMarkers.map((item, index) => (
+            <Marker coordinate={item.coordinates} key={index} title="Test" />
+          )) }
+        </MapView>
 
-          // marginLeft: 30,
-        }}
-      >
-        <CameraCarousel />
+        <View
+          style={{
+            backgroundColor: theme.colors.backdrop,
+            borderRadius: 15,
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'absolute',
+            bottom: 30,
+            height: 250,
+            minWidth: '95%',
+            marginHorizontal: 10
+          }}
+        >
+
+        </View>
       </View>
     </SafeAreaView>
   )
