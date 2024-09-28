@@ -12,6 +12,10 @@ import Login from "./src/screens/login";
 import PostLoginStack from "./src/navigators/postLoginStack";
 import CustomAppBar from "./src/components/CustomAppBar";
 
+import 'react-native-gesture-handler';
+import 'react-native-reanimated';
+
+
 const { height } = Dimensions.get("window");
 const Stack = createNativeStackNavigator();
 

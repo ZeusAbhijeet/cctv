@@ -1,7 +1,6 @@
 import { Text } from "react-native-paper";
 import { View } from "react-native";
 import React from 'react';
-import { useState } from "react";
 
 export default function UserInfo({ title, info }) {
     return (
