@@ -32,7 +32,7 @@ export default function App() {
             <SafeAreaProvider>
               <StatusBar style="auto" />
               <Stack.Navigator
-                initialRouteName='login'
+                initialRouteName='PostLogin'
                 screenOptions={{
                   header: (props) => <CustomAppBar {...props} />,
                 }}
