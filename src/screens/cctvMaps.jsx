@@ -25,7 +25,7 @@ export default function CctvMaps() {
   ]
 
   return (
-    <SafeAreaView
+    <View
       style={[
         styles.container,
         {
@@ -65,7 +65,7 @@ export default function CctvMaps() {
             <Marker coordinate={item.coordinates} key={index} title="Test" />
           )) }
         </MapView>
-        <Searchbar
+        {/*<Searchbar
           placeholder='Search'
           onChangeText={(text) => setSearchQuery(text)}
           value={searchQuery}
@@ -74,10 +74,10 @@ export default function CctvMaps() {
             top: 5,
             marginHorizontal: 10,
           }}
-        />
+        />*/}
         <FlatList
           horizontal={true}
-          style={{position: 'absolute', top: 65, marginLeft: 15}}
+          style={{position: 'absolute', top: 15, marginLeft: 15}}
           data={radius}
           renderItem={({item, index}) => {
             return (
@@ -115,7 +115,7 @@ export default function CctvMaps() {
 
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   )
 }
 
