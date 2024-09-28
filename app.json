@@ -19,6 +19,12 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyCA7hGtq44SVIGmq4Df1Gx5hG-J9W3b2Zc"
+        }
+      },
+      "permissions": ["android.permission.ACCESS_FINE_LOCATION"],
       "package": "com.bois.CCTV"
     },
     "web": {

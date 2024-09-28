@@ -1,10 +1,10 @@
-import { Searchbar, Chip, useTheme } from "react-native-paper";
+import {Searchbar, Chip, useTheme, SegmentedButtons} from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { View, StyleSheet, Dimensions, FlatList, ToastAndroid, Platform, PermissionsAndroid } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import CameraCarousel from "./components/CameraCarousel";
+import CameraCarousel from "../components/CameraCarousel";
 import {useEffect, useRef, useState} from "react";
-import MapView, {Marker} from "react-native-maps";
+import MapView, {Marker, PROVIDER_GOOGLE} from "react-native-maps";
 import {fromAddress} from "react-geocode";
 import Geolocation from '@react-native-community/geolocation'
 
@@ -18,17 +18,8 @@ export default function CctvMaps() {
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
-  const radius = [
-    {name: "250m", value: 250},
-    {name: "500m", value: 500},
-    {name: "1km", value: 1000},
-    {name: "1.5km", value: 1500},
-  ]
-  const staticMarkers = [
-    { coordinates: { latitude: 15.048392, longitude: 73.985453 } },
-    { coordinates: { latitude: 15.04798, longitude: 73.985574 } },
-    { coordinates: { latitude: 15.047951, longitude: 73.985535 } },
-  ]
+  const [selectedRadius, setSelectedRadius] = useState(250);
+
   const mapRef = useRef(null);
 
   useEffect(() => {
@@ -83,7 +74,7 @@ export default function CctvMaps() {
 
   const dummyData = [
     {
-      id: 1,
+
       location: "Manveers kitchen/Forget me not Dhawalkhazan Agonda",
       private_govt: "private",
       owner: "Manveer Singh",
@@ -91,7 +82,7 @@ export default function CctvMaps() {
       status: "working",
     },
     {
-      id: 2,
+
       location: "Manveers kitchen/Forget me not Dhawalkhazan Agonda",
       private_govt: "private",
       owner: "Manveer Singh",
@@ -99,7 +90,7 @@ export default function CctvMaps() {
       status: "working",
     },
     {
-      id: 3,
+
       location: "Manveers kitchen/Forget me not Dhawalkhazan Agonda",
       private_govt: "private",
       owner: "Manveer Singh",
@@ -125,6 +116,20 @@ export default function CctvMaps() {
   //     </Card.Content>
   //   </Card>
   // }
+
+
+  const staticMarkers = [
+    { coordinates: { latitude: 15.048392, longitude: 73.985453 } },
+    { coordinates: { latitude: 15.04798, longitude: 73.985574 } },
+    { coordinates: { latitude: 15.047951, longitude: 73.985535 } },
+  ]
+
+  const radius = [
+    {label: "250m", value: 250},
+    {label: "500m", value: 500},
+    {label: "1km", value: 1000},
+    {label: "1.5km", value: 1500},
+  ]
 
   function searchLocation() {
     fromAddress(searchQuery)
@@ -183,32 +188,18 @@ export default function CctvMaps() {
           }}
           onSubmitEditing={searchLocation}
         />
-        <FlatList
-          horizontal={true}
-          style={{marginLeft: 15, maxHeight: 40}}
-          data={radius}
-          renderItem={({item, index}) => {
-            return (
-              <Chip
-                key={index}
-                mode='outlined'
-                height={30}
-                style={{backgroundColor: theme.colors.background}}
-                onPress={() => {ToastAndroid.show("Radius selected: " + item.value, ToastAndroid.SHORT)}}
-                showSelectedCheck={true}
-              >
-                {item.name}
-              </Chip>
-            )
+        <SegmentedButtons
+          value={selectedRadius}
+          onValueChange={setSelectedRadius}
+          buttons={radius}
+          style={{
+            marginBottom: 15,
+            marginHorizontal: 10,
           }}
-          ItemSeparatorComponent={() => {
-            return (
-              <View style={{minWidth: 5, maxHeight: 5}} />
-            )
-          }}
-        ></FlatList>
+        />
         <MapView
           ref={mapRef}
+          provider={PROVIDER_GOOGLE}
           initialRegion={region}
           region={region}
           style={{
@@ -229,12 +220,12 @@ export default function CctvMaps() {
 
         <View
           style={{
-            backgroundColor: theme.colors.backdrop,
+            opacity: 100,
             borderRadius: 15,
             alignItems: 'center',
             justifyContent: 'center',
             position: 'absolute',
-            bottom: 30,
+            bottom: 0,
             height: 250,
             minWidth: '95%',
             marginHorizontal: 10

@@ -5,8 +5,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import React from 'react';
 import { Appbar, Avatar } from 'react-native-paper';
 import { useState } from "react";
-import UserInfo from "./components/UserInfo";
-import CameraInfo from "./components/CameraInfo";
+import UserInfo from "../components/UserInfo";
+import CameraInfo from "../components/CameraInfo";
 
 export default function Profile() {
   const theme = useTheme();
@@ -15,20 +15,8 @@ export default function Profile() {
   const [officerId, setOfficerId] = useState("1234");
 
   return (
-    // <SafeAreaView
-    //   style={[
-    //     styles.container,
-    //     {
-    //       backgroundColor: theme.colors.background,
-    //       paddingHorizontal: 15,
-    //     }
-    //   ]
-    //   }
-    // >
-
-    // </SafeAreaView>
     <>
-    {/* <Appbar.Header>
+    <Appbar.Header>
       <Appbar.BackAction onPress={() => { }} />
       <Appbar.Content title="Profile" />
     </Appbar.Header>
@@ -62,7 +50,7 @@ export default function Profile() {
     <UserInfo title={"EMAIL"} info={"johndoe@gmail.com"} />
     <UserInfo title={"PHONE"} info={"9999999999"} />
     <UserInfo title={"RANK"} info={"DGP"} />
-    </View> */}
+    </View>
     <Appbar.Header>
       <Appbar.BackAction onPress={() => { }} />
       <Appbar.Content title="CCTV" />
