@@ -12,6 +12,7 @@ import {SafeAreaProvider} from "react-native-safe-area-context";
 import Login from "./src/screens/login";
 import PostLoginStack from "./src/navigators/postLoginStack";
 import CustomAppBar from "./src/components/CustomAppBar";
+import { setDefaults } from "react-geocode";
 
 const { height } = Dimensions.get("window");
 const Stack = createNativeStackNavigator();
@@ -19,6 +20,12 @@ const Stack = createNativeStackNavigator();
 import MapLibreGL from '@maplibre/maplibre-react-native';
 
 MapLibreGL.setAccessToken(null);
+
+setDefaults({
+  key: "AIzaSyBN7WeAsX5Ya5BvLY_4AKQFklaDSBIPylU",
+  language: 'en',
+  region: 'in'
+})
 
 export default function App() {
   const colorScheme = useColorScheme();

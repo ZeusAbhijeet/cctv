@@ -1,15 +1,83 @@
 import {Chip, Searchbar, Text, useTheme} from "react-native-paper";
 import {useNavigation} from "@react-navigation/native";
-import {View, StyleSheet, TextInput, ScrollView, FlatList, ToastAndroid} from "react-native";
+import {
+  View,
+  StyleSheet,
+  TextInput,
+  ScrollView,
+  FlatList,
+  ToastAndroid,
+  Platform,
+  PermissionsAndroid
+} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
-import {useState} from "react";
-import MapLibreGL from '@maplibre/maplibre-react-native';
+import {useEffect, useRef, useState} from "react";
 import MapView, {Marker} from "react-native-maps";
+import {fromAddress} from "react-geocode";
+import Geolocation from '@react-native-community/geolocation'
 
 export default function CctvMaps() {
   const theme = useTheme();
   const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState("");
+  const [region, setRegion] = useState({
+    latitude: 15.048392,
+    longitude: 73.985453,
+    latitudeDelta: 0.0922,
+    longitudeDelta: 0.0421,
+  });
+  const mapRef = useRef(null);
+
+  useEffect(() => {
+    requestLocationPermission();
+  }, []);
+
+  const requestLocationPermission = async () => {
+    if (Platform.OS === 'ios') {
+      getOneTimeLocation();
+    } else {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'Location Access Required',
+            message: 'This app needs to access your location',
+          },
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          getOneTimeLocation();
+        } else {
+          ToastAndroid.show('Permission Denied', ToastAndroid.SHORT);
+        }
+      } catch (err) {
+        console.warn(err);
+      }
+    }
+  };
+
+  const getOneTimeLocation = () => {
+    Geolocation.getCurrentPosition(
+      (position) => {
+        const currentLongitude = position.coords.longitude;
+        const currentLatitude = position.coords.latitude;
+        setRegion({
+          latitude: currentLatitude,
+          longitude: currentLongitude,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        });
+      },
+      (error) => {
+        ToastAndroid.show(error.message, ToastAndroid.SHORT);
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 30000,
+        maximumAge: 1000
+      },
+    );
+  };
+
 
   const staticMarkers = [
     { coordinates: { latitude: 15.048392, longitude: 73.985453 } },
@@ -24,60 +92,57 @@ export default function CctvMaps() {
     {name: "1.5km", value: 1500},
   ]
 
+  function searchLocation() {
+    fromAddress(searchQuery)
+      .then(({results}) => {
+        let newRegion = {
+          latitude: results[0].geometry.location.lat,
+          longitude: results[0].geometry.location.lng,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        }
+        setRegion(newRegion);
+        mapRef.current.animateToRegion(newRegion, 1000);
+      })
+      .catch(error => {
+        console.error("Error in geocoding:", error);
+        ToastAndroid.show("Error finding location", ToastAndroid.SHORT);
+      });
+  }
+
   return (
-    <View
+    <SafeAreaView
       style={[
         styles.container,
         {
           backgroundColor: theme.colors.background,
         }
-        ]
+      ]
     }
     >
-
       <View
         style={{
           flex: 1,
-          backgroundColor: theme.colors.secondaryContainer,
+          backgroundColor: theme.colors.background,
           minWidth: '100%',
           borderRadius: 15,
           justifyContent: 'center',
           marginVertical: 5,
         }}
       >
-        <MapView
-          initialRegion={{
-            latitude: 15.048392,
-            longitude: 73.985453,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
-          }}
-          style={{
-            flex: 1,
-            alignSelf: 'stretch',
-            borderRadius: 15
-          }}
-          userInterfaceStyle={theme.dark ? 'dark' : 'light'}
-          showsUserLocation={true}
-
-        >
-          { staticMarkers.map((item, index) => (
-            <Marker coordinate={item.coordinates} key={index} title="Test" />
-          )) }
-        </MapView>
-        {/*<Searchbar
+        <Searchbar
           placeholder='Search'
           onChangeText={(text) => setSearchQuery(text)}
           value={searchQuery}
           style={{
-            position: 'absolute',
-            top: 5,
             marginHorizontal: 10,
+            marginVertical: 10,
           }}
-        />*/}
+          onSubmitEditing={searchLocation}
+        />
         <FlatList
           horizontal={true}
-          style={{position: 'absolute', top: 15, marginLeft: 15}}
+          style={{marginLeft: 15, maxHeight: 40}}
           data={radius}
           renderItem={({item, index}) => {
             return (
@@ -95,10 +160,30 @@ export default function CctvMaps() {
           }}
           ItemSeparatorComponent={() => {
             return (
-              <View style={{minWidth: 5}} />
+              <View style={{minWidth: 5, maxHeight: 5}} />
             )
           }}
         ></FlatList>
+        <MapView
+          ref={mapRef}
+          initialRegion={region}
+          region={region}
+          style={{
+            flex: 1,
+            alignSelf: 'stretch',
+            borderRadius: 15
+          }}
+          userInterfaceStyle={theme.dark ? 'dark' : 'light'}
+          showsUserLocation={true}
+          loadingEnabled={true}
+          loadingIndicatorColor={theme.colors.primary}
+          loadingBackgroundColor={theme.colors.background}
+        >
+          { staticMarkers.map((item, index) => (
+            <Marker coordinate={item.coordinates} key={index} title="Test" />
+          )) }
+        </MapView>
+
         <View
           style={{
             backgroundColor: theme.colors.backdrop,
@@ -115,7 +200,7 @@ export default function CctvMaps() {
 
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   )
 }
 

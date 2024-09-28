@@ -1,7 +1,5 @@
 import {createNativeStackNavigator} from "@react-navigation/native-stack";
-import CustomAppBar from "../components/CustomAppBar";
 import CctvMaps from "../screens/cctvMaps";
-import MapsScreenAppBar from "../components/MapsScreenAppBar";
 
 const CCTVMapsNavigator = createNativeStackNavigator();
 export default function CCTVMapsStack() {
@@ -15,7 +13,7 @@ export default function CCTVMapsStack() {
         name='CCTVMapsPage'
         component={CctvMaps}
         options={{
-          header: (props) => <MapsScreenAppBar {...props} />,
+          headerShown: false,
           headerTitle: 'Camera Map'
         }}
       />
