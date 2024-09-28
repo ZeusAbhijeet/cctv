@@ -2,7 +2,8 @@ import { StatusBar } from 'expo-status-bar';
 import {Dimensions, StyleSheet, useColorScheme, View} from 'react-native';
 import {MD3DarkTheme, MD3LightTheme, PaperProvider, Text} from "react-native-paper";
 import {NavigationContainer} from "@react-navigation/native";
-import { useMemo } from "react";
+import {useEffect, useMemo} from "react";
+import {request, PERMISSIONS} from "react-native-permissions";
 
 import SlidingUpPanel from "rn-sliding-up-panel";
 import {createNativeStackNavigator} from "@react-navigation/native-stack";
@@ -15,6 +16,10 @@ import CustomAppBar from "./src/components/CustomAppBar";
 const { height } = Dimensions.get("window");
 const Stack = createNativeStackNavigator();
 
+import MapLibreGL from '@maplibre/maplibre-react-native';
+
+MapLibreGL.setAccessToken(null);
+
 export default function App() {
   const colorScheme = useColorScheme();
   let { theme } = useMaterial3Theme();
@@ -25,6 +30,18 @@ export default function App() {
     [colorScheme, theme]
   );
 
+  useEffect(() => {
+    requestLocationPermission();
+  }, []);
+
+  function requestLocationPermission() {
+    request(
+      PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
+      {title: 'Allow Fine location access', message: 'Allow for current location'}
+    ).then((result) => {
+      console.log(result);
+    })
+  }
 
   return (
       <PaperProvider theme={paperTheme}>
