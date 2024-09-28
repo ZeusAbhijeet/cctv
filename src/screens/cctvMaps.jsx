@@ -1,10 +1,8 @@
-import { Searchbar, Text, useTheme, FAB } from "react-native-paper";
+import { Searchbar, Text, useTheme } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { View, StyleSheet, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
-import CameraInfoCard from "./components/CameraInfoCard";
-import Carousel from "react-native-reanimated-carousel";
 import CameraCarousel from "./components/CameraCarousel";
 
 export default function CctvMaps() {
@@ -116,11 +114,6 @@ export default function CctvMaps() {
       >
         <CameraCarousel />
       </View>
-      <FAB
-        icon="map-marker"
-        style={styles.fab}
-        onPress={() => console.log('Pressed')}
-      />
     </SafeAreaView>
   )
 }
@@ -130,12 +123,5 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
-  },
-  fab: {
-    position: 'absolute',
-    // alignContent: "center",
-    margin: 16,
-    right: 0,
-    bottom: 0,
   },
 })

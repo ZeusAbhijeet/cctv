@@ -1,17 +1,16 @@
-import { Text } from "react-native-paper";
+import { Text } from 'react-native-paper';
 import { View } from "react-native";
-import React from 'react';
+import React from "react";
 
-export default function UserInfo({ title, info }) {
+export default function CameraInfo({ title, value }) {
     return (
         <View
             style={{
-                paddingTop: 20,
-                // paddingStart: 10
+                paddingTop: 10,
             }}
         >
             <Text
-                variant="lableLarge"
+                variant='labelLarge'
                 style={{
                     color: "#A9A9A9",
                     fontWeight: "bold"
@@ -19,7 +18,8 @@ export default function UserInfo({ title, info }) {
             >{title}</Text>
             <Text
                 variant="titleLarge"
-            >{info}</Text>
+            >{value}</Text>
         </View>
     );
 }
+
