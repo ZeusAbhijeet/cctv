@@ -1,16 +1,8 @@
-import {Chip, Searchbar, Text, useTheme} from "react-native-paper";
-import {useNavigation} from "@react-navigation/native";
-import {
-  View,
-  StyleSheet,
-  TextInput,
-  ScrollView,
-  FlatList,
-  ToastAndroid,
-  Platform,
-  PermissionsAndroid
-} from "react-native";
-import {SafeAreaView} from "react-native-safe-area-context";
+import { Searchbar, Chip, useTheme } from "react-native-paper";
+import { useNavigation } from "@react-navigation/native";
+import { View, StyleSheet, Dimensions, FlatList, ToastAndroid, Platform, PermissionsAndroid } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import CameraCarousel from "./components/CameraCarousel";
 import {useEffect, useRef, useState} from "react";
 import MapView, {Marker} from "react-native-maps";
 import {fromAddress} from "react-geocode";
@@ -26,6 +18,7 @@ export default function CctvMaps() {
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
+
   const mapRef = useRef(null);
 
   useEffect(() => {
@@ -78,6 +71,51 @@ export default function CctvMaps() {
     );
   };
 
+  const dummyData = [
+    {
+      id: 1,
+      location: "Manveers kitchen/Forget me not Dhawalkhazan Agonda",
+      private_govt: "private",
+      owner: "Manveer Singh",
+      contact: "8806754026",
+      status: "working",
+    },
+    {
+      id: 2,
+      location: "Manveers kitchen/Forget me not Dhawalkhazan Agonda",
+      private_govt: "private",
+      owner: "Manveer Singh",
+      contact: "8806754026",
+      status: "working",
+    },
+    {
+      id: 3,
+      location: "Manveers kitchen/Forget me not Dhawalkhazan Agonda",
+      private_govt: "private",
+      owner: "Manveer Singh",
+      contact: "8806754026",
+      status: "working",
+    },
+  ]
+  const [pagingEnabled, setPagingEnabled] = useState(true)
+  const width = Dimensions.get('window').width
+  // const renderItem = ({item}) => {
+  //   <Card
+  //     style={{
+  //       minHeight: "34%",
+  //       minWidth: "80%"
+  //     }}
+  //   >
+  //     <Card.Content>
+  //       <Text variant="titleMedium" style={styles.text}>{item.location}</Text>
+  //       <Text variant="bodyLarge" style={styles.text}>{item.private_govt}</Text>
+  //       <Text variant="bodyLarge" style={styles.text}>{item.owner}</Text>
+  //       <Text variant="bodyLarge" style={styles.text}>{item.contact}</Text>
+  //       <Text variant="bodyLarge" style={styles.text}>{item.status}</Text>
+  //     </Card.Content>
+  //   </Card>
+  // }
+
 
   const staticMarkers = [
     { coordinates: { latitude: 15.048392, longitude: 73.985453 } },
@@ -126,6 +164,7 @@ export default function CctvMaps() {
           backgroundColor: theme.colors.background,
           minWidth: '100%',
           borderRadius: 15,
+          alignItems: 'center',
           justifyContent: 'center',
           marginVertical: 5,
         }}
@@ -197,7 +236,7 @@ export default function CctvMaps() {
             marginHorizontal: 10
           }}
         >
-
+          <CameraCarousel />
         </View>
       </View>
     </SafeAreaView>
