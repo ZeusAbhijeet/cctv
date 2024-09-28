@@ -1,22 +1,8 @@
-import { Searchbar, Text, useTheme } from "react-native-paper";
+import { Searchbar, Chip, useTheme } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
-import { View, StyleSheet, Dimensions } from "react-native";
+import { View, StyleSheet, Dimensions, FlatList, ToastAndroid, Platform, PermissionsAndroid } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useState } from "react";
 import CameraCarousel from "./components/CameraCarousel";
-import {Chip, Searchbar, Text, useTheme} from "react-native-paper";
-import {useNavigation} from "@react-navigation/native";
-import {
-  View,
-  StyleSheet,
-  TextInput,
-  ScrollView,
-  FlatList,
-  ToastAndroid,
-  Platform,
-  PermissionsAndroid
-} from "react-native";
-import {SafeAreaView} from "react-native-safe-area-context";
 import {useEffect, useRef, useState} from "react";
 import MapView, {Marker} from "react-native-maps";
 import {fromAddress} from "react-geocode";
@@ -32,6 +18,17 @@ export default function CctvMaps() {
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
+  const radius = [
+    {name: "250m", value: 250},
+    {name: "500m", value: 500},
+    {name: "1km", value: 1000},
+    {name: "1.5km", value: 1500},
+  ]
+  const staticMarkers = [
+    { coordinates: { latitude: 15.048392, longitude: 73.985453 } },
+    { coordinates: { latitude: 15.04798, longitude: 73.985574 } },
+    { coordinates: { latitude: 15.047951, longitude: 73.985535 } },
+  ]
   const mapRef = useRef(null);
 
   useEffect(() => {
@@ -243,7 +240,7 @@ export default function CctvMaps() {
             marginHorizontal: 10
           }}
         >
-
+          <CameraCarousel />
         </View>
       </View>
     </SafeAreaView>

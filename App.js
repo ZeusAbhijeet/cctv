@@ -20,9 +20,9 @@ import 'react-native-reanimated';
 const { height } = Dimensions.get("window");
 const Stack = createNativeStackNavigator();
 
-import MapLibreGL from '@maplibre/maplibre-react-native';
+// import MapLibreGL from '@maplibre/maplibre-react-native';
 
-MapLibreGL.setAccessToken(null);
+// MapLibreGL.setAccessToken(null);
 
 setDefaults({
   key: "AIzaSyBN7WeAsX5Ya5BvLY_4AKQFklaDSBIPylU",
