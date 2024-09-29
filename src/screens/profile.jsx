@@ -1,7 +1,6 @@
-import { Text, useTheme } from "react-native-paper";
+import { Text, useTheme, TextInput, RadioButton, } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { View, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import React from 'react';
 import { Appbar, Avatar } from 'react-native-paper';
 import { useState } from "react";

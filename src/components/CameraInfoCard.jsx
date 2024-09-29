@@ -32,5 +32,4 @@ const styles = StyleSheet.create({
     text: {
         paddingTop: 8
     }
-
 })

@@ -13,6 +13,7 @@ import CustomAppBar from "./src/components/CustomAppBar";
 import { setDefaults } from "react-geocode";
 import 'react-native-gesture-handler';
 import 'react-native-reanimated';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AuthLoader from "./src/components/AuthLoader";
 
 const { height } = Dimensions.get("window");
@@ -59,8 +60,8 @@ export default function App() {
     return <AuthLoader onAuthStateResolved={handleAuthStateResolved} />;
   }
 
-
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>  
       <PaperProvider theme={paperTheme}>
         <NavigationContainer>
             <SafeAreaProvider>
@@ -77,6 +78,7 @@ export default function App() {
             </SafeAreaProvider>
         </NavigationContainer>
       </PaperProvider>
+    </GestureHandlerRootView>
   );
 }
 
