@@ -4,6 +4,8 @@ import CctvMaps from "../screens/cctvMaps";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Profile from "../screens/profile";
 import CustomAppBar from "../components/CustomAppBar";
+import CCTVMapsStack from "./CCTVMapsStack";
+import ProfileStack from "./ProfileStack";
 
 const BottomNavigator = createMaterialBottomTabNavigator();
 export default function BottomTabNavigator() {
@@ -17,7 +19,7 @@ export default function BottomTabNavigator() {
     >
       <BottomNavigator.Screen
         name='CCTVMaps'
-        component={CctvMaps}
+        component={CCTVMapsStack}
         options={{
           tabBarLabel: 'Map',
           tabBarIcon: ({color, size}) => (
@@ -31,8 +33,8 @@ export default function BottomTabNavigator() {
         }}
       />
       <BottomNavigator.Screen
-        name='Profile'
-        component={Profile}
+        name='ProfileScreen'
+        component={ProfileStack}
         options={{
           tabBarLabel: 'Profile',
           tabBarIcon: ({color, size}) => (

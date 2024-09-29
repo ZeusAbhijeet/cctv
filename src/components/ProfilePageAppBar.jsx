@@ -2,9 +2,8 @@ import { Appbar } from "react-native-paper";
 import { getHeaderTitle } from '@react-navigation/elements';
 import LogoutAction from "./LogoutAction";
 
-export default function CustomAppBar({ navigation, route, options, back }) {
+export default function ProfilePageAppBar({ navigation, route, options, back }) {
   const title = getHeaderTitle(options, route.name);
-
   const isElevated = back;
 
   return (
@@ -14,11 +13,7 @@ export default function CustomAppBar({ navigation, route, options, back }) {
         null
       }
       <Appbar.Content title={title} />
-      {!back?
-        <LogoutAction /> :
-        null
-      }
-
+      <LogoutAction />
     </Appbar.Header>
-  );
+  )
 }

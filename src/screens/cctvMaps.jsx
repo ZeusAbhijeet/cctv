@@ -1,6 +1,15 @@
-import {Searchbar, useTheme, SegmentedButtons} from "react-native-paper";
+import {Searchbar, useTheme, SegmentedButtons, Button} from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
-import {View, StyleSheet, Dimensions, ToastAndroid, Platform, PermissionsAndroid, Alert} from "react-native";
+import {
+  View,
+  StyleSheet,
+  Dimensions,
+  ToastAndroid,
+  Platform,
+  PermissionsAndroid,
+  Alert,
+  TouchableOpacity
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import MapView, {Circle, Marker, PROVIDER_GOOGLE} from "react-native-maps";
@@ -10,9 +19,7 @@ import CameraInfoCard from "../components/CameraInfoCard";
 import Carousel from "react-native-reanimated-carousel";
 import axios from 'axios';
 
-
 const ITEM_HEIGHT = Dimensions.get('window').width * 0.75;
-
 
 export default function CctvMaps() {
   const theme = useTheme();
@@ -24,7 +31,13 @@ export default function CctvMaps() {
   const [selectedMarkerIndex, setSelectedMarkerIndex] = useState(0);
   const [originMarker, setOriginMarker] = useState(null);
   const [visibleMarkers, setVisibleMarkers] = useState([]);
-
+  const [isGovtOrPrivate, setIsGovtOrPrivate] = useState("");
+  const [isWorkingOrNotWorking, setIsWorkingOrNotWorking] = useState("");
+  const [visibleRegion, setVisibleRegion] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
+  const [showSearchInNewRegionButton, setShowSearchInNewRegionButton] = useState(false);
+  const [showSetToUserLocationButton, setShowSetToUserLocationButton] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   const mapRef = useRef(null);
   const carouselRef = useRef(null);
@@ -36,11 +49,13 @@ export default function CctvMaps() {
   useEffect(() => {
     if (cameraMarkers.length > 0 && mapRef.current) {
       focusMarker(selectedMarkerIndex);
+    } else if (cameraMarkers.length === 0 && selectedMarkerIndex > 0) {
+      setSelectedMarkerIndex(0);
     }
   }, [selectedMarkerIndex, cameraMarkers]);
 
   useEffect(() => {
-    if (region != null) {
+    if (region != null && !isSearching) {
       fetchNearestCameraLocations();
       setOriginMarker({
         latitude: region.latitude,
@@ -72,81 +87,6 @@ export default function CctvMaps() {
     }
   };
 
-  const getOneTimeLocation = () => {
-    Geolocation.getCurrentPosition(
-      (position) => {
-        const currentLongitude = position.coords.longitude;
-        const currentLatitude = position.coords.latitude;
-        setRegion({
-          latitude: currentLatitude,
-          longitude: currentLongitude,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        });
-      },
-      (error) => {
-        ToastAndroid.show(error.message, ToastAndroid.SHORT);
-      },
-      {
-        enableHighAccuracy: false,
-        timeout: 30000,
-        maximumAge: 1000
-      },
-    );
-  };
-
-  const dummyData = [
-    {
-
-      location: "Manveers kitchen/Forget me not Dhawalkhazan Agonda",
-      private_govt: "private",
-      owner: "Manveer Singh",
-      contact: "8806754026",
-      status: "working",
-    },
-    {
-
-      location: "Manveers kitchen/Forget me not Dhawalkhazan Agonda",
-      private_govt: "private",
-      owner: "Manveer Singh",
-      contact: "8806754026",
-      status: "working",
-    },
-    {
-
-      location: "Manveers kitchen/Forget me not Dhawalkhazan Agonda",
-      private_govt: "private",
-      owner: "Manveer Singh",
-      contact: "8806754026",
-      status: "working",
-    },
-  ]
-  const [pagingEnabled, setPagingEnabled] = useState(true)
-  const width = Dimensions.get('window').width
-  // const renderItem = ({item}) => {
-  //   <Card
-  //     style={{
-  //       minHeight: "34%",
-  //       minWidth: "80%"
-  //     }}
-  //   >
-  //     <Card.Content>
-  //       <Text variant="titleMedium" style={styles.text}>{item.location}</Text>
-  //       <Text variant="bodyLarge" style={styles.text}>{item.private_govt}</Text>
-  //       <Text variant="bodyLarge" style={styles.text}>{item.owner}</Text>
-  //       <Text variant="bodyLarge" style={styles.text}>{item.contact}</Text>
-  //       <Text variant="bodyLarge" style={styles.text}>{item.status}</Text>
-  //     </Card.Content>
-  //   </Card>
-  // }
-
-
-  const staticMarkers = [
-    { coordinates: { latitude: 15.048392, longitude: 73.985453 } },
-    { coordinates: { latitude: 15.04798, longitude: 73.985574 } },
-    { coordinates: { latitude: 15.047951, longitude: 73.985535 } },
-  ]
-
   const radius = [
     {label: "250m", value: 250},
     {label: "500m", value: 500},
@@ -155,6 +95,9 @@ export default function CctvMaps() {
   ]
 
   function searchLocation() {
+    setIsSearching(true);
+    setCameraMarkers([]); // Clear the cameraMarkers state
+
     fromAddress(searchQuery)
       .then(({results}) => {
         let newRegion = {
@@ -169,8 +112,214 @@ export default function CctvMaps() {
       .catch(error => {
         console.error("Error in geocoding:", error);
         ToastAndroid.show("Error finding location", ToastAndroid.SHORT);
+      })
+      .finally(() => {
+        setIsSearching(false);
       });
   }
+
+  const fetchNearestCameraLocations = async () => {
+    const uri = "http://10.70.13.203:8080/nearby_cameras";
+    setCameraMarkers([]);
+    setVisibleMarkers([]);
+
+    try {
+      const response = await axios.post(uri, {
+        latitude: region.latitude,
+        longitude: region.longitude,
+        radius_meters: selectedRadius,
+        status_filter: isWorkingOrNotWorking,
+        ownership_filter: isGovtOrPrivate,
+      });
+      setIsSearching(true);
+
+      if (Array.isArray(response.data)) {
+        const newCameraMarkers = response.data.map(camera => ({
+          id: camera.id,
+          coordinate: {
+            latitude: parseFloat(camera.latitude) || 0,
+            longitude: parseFloat(camera.longitude) || 0,
+          },
+          title: camera.location || "Camera",
+          description: `Owner: ${camera.owner_name || 'Unknown'}, Status: ${camera.status || 'Unknown'}`,
+          privateGovt: camera.private_govt || 'Unknown',
+          contactNo: camera.contact_no || 'Unknown',
+          coverage: camera.coverage || 'Unknown',
+          backup: camera.backup || 'Unknown',
+          connectedNetwork: camera.connected_network || 'Unknown',
+          cameraId: camera.camera_id || 'Unknown',
+          distance: camera.distance || 0,
+        }));
+
+        setCameraMarkers(newCameraMarkers);
+        setIsSearching(false);
+        return newCameraMarkers;
+      } else {
+        throw new Error('Expected array response, got ' + typeof response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching camera locations:", error);
+
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error("Response data:", error.response.data);
+        console.error("Response status:", error.response.status);
+        console.error("Response headers:", error.response.headers);
+
+        if (error.response.status === 422) {
+          ToastAndroid.show("Invalid request. Please try again.", ToastAndroid.SHORT);
+        } else {
+          ToastAndroid.show(`Server error: ${error.response.status}`, ToastAndroid.SHORT);
+        }
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error("No response received:", error.request);
+        ToastAndroid.show("No response from server", ToastAndroid.SHORT);
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error("Error setting up request:", error.message);
+        ToastAndroid.show("Error setting up request", ToastAndroid.SHORT);
+      }
+
+      Alert.alert("Error", "Error fetching camera locations:\n" + error.message);
+      throw error;
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+
+  const focusMarker = (index) => {
+    if (mapRef.current && cameraMarkers[index]) {
+      mapRef.current.animateToRegion({
+        latitude: cameraMarkers[index].coordinate.latitude,
+        longitude: cameraMarkers[index].coordinate.longitude,
+        latitudeDelta: 0.005,
+        longitudeDelta: 0.005,
+      }, 1000);
+    }
+  };
+
+  const handleMarkerPress = (index) => {
+    setSelectedMarkerIndex(index);
+    if (carouselRef.current) {
+      carouselRef.current.scrollTo({ index: index });
+    }
+  };
+
+  const handleMapRegionChange = useCallback((newRegion) => {
+    const visibleMarkers = cameraMarkers.filter(marker =>
+      marker.coordinate.latitude >= newRegion.latitude - newRegion.latitudeDelta / 2 &&
+      marker.coordinate.latitude <= newRegion.latitude + newRegion.latitudeDelta / 2 &&
+      marker.coordinate.longitude >= newRegion.longitude - newRegion.longitudeDelta / 2 &&
+      marker.coordinate.longitude <= newRegion.longitude + newRegion.longitudeDelta / 2
+    );
+    setVisibleMarkers(visibleMarkers);
+  }, [cameraMarkers]);
+
+  const renderCarouselItem = useCallback(({ item }) => (
+    <CameraInfoCard
+      cameraLocation={item.title}
+      cameraClass={item.privateGovt}
+      cameraOwner={item.description.split(',')[0].split(': ')[1]}
+      cameraContactNo={item.contactNo}
+      cameraStatus={item.description.split(',')[1].split(': ')[1]}
+      allData={item}
+    />
+  ), []);
+
+  const memoizedMarkers = useMemo(() =>
+      visibleMarkers.map((marker, index) => (
+        <Marker
+          coordinate={marker.coordinate}
+          key={marker.id || index}
+          onPress={() => handleMarkerPress(cameraMarkers.indexOf(marker))}
+          pinColor="blue"
+        />
+      )),
+    [visibleMarkers, handleMarkerPress]
+  );
+
+  const handleMapRegionChangeComplete = (newRegion) => {
+    setVisibleRegion(newRegion);
+
+    // Check if the new region is significantly different from the current search region
+    if (region) {
+      const latDiff = Math.abs(newRegion.latitude - region.latitude);
+      const lonDiff = Math.abs(newRegion.longitude - region.longitude);
+
+      if (latDiff > region.latitudeDelta / 4 || lonDiff > region.longitudeDelta / 4) {
+        setShowSearchInNewRegionButton(true);
+      } else {
+        setShowSearchInNewRegionButton(false);
+      }
+    }
+
+    // Check if the new region is different from the user's location
+    if (userLocation) {
+      const latDiff = Math.abs(newRegion.latitude - userLocation.latitude);
+      const lonDiff = Math.abs(newRegion.longitude - userLocation.longitude);
+
+      if (latDiff > 0.01 || lonDiff > 0.01) { // Roughly 1km
+        setShowSetToUserLocationButton(true);
+      } else {
+        setShowSetToUserLocationButton(false);
+      }
+    }
+  };
+
+  const searchInNewRegion = () => {
+    if (visibleRegion) {
+      setRegion(visibleRegion);
+      fetchNearestCameraLocations();
+      setShowSearchInNewRegionButton(false);
+    }
+  };
+
+  const setToUserLocation = () => {
+    if (userLocation) {
+      const newRegion = {
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      };
+      setRegion(newRegion);
+      mapRef.current.animateToRegion(newRegion, 1000);
+      fetchNearestCameraLocations();
+      setShowSetToUserLocationButton(false);
+    }
+  };
+
+  // Modify getOneTimeLocation to also set userLocation
+  const getOneTimeLocation = () => {
+    Geolocation.getCurrentPosition(
+      (position) => {
+        const currentLongitude = position.coords.longitude;
+        const currentLatitude = position.coords.latitude;
+        const newRegion = {
+          latitude: currentLatitude,
+          longitude: currentLongitude,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        };
+        setRegion(newRegion);
+        setUserLocation({
+          latitude: currentLatitude,
+          longitude: currentLongitude,
+        });
+      },
+      (error) => {
+        ToastAndroid.show(error.message, ToastAndroid.SHORT);
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 30000,
+        maximumAge: 1000
+      },
+    );
+  };
 
   const fetchNearestCameraLocations = async () => {
     const uri = "http://10.70.13.203:8080/nearby_cameras";
@@ -315,6 +464,7 @@ export default function CctvMaps() {
           value={searchQuery}
           style={styles.searchbar}
           onSubmitEditing={searchLocation}
+          loading={isSearching}
         />
         <SegmentedButtons
           value={selectedRadius}
@@ -334,6 +484,8 @@ export default function CctvMaps() {
           loadingIndicatorColor={theme.colors.primary}
           loadingBackgroundColor={theme.colors.background}
           toolbarEnabled={false}
+          onRegionChangeComplete={handleMapRegionChangeComplete}
+          showsMyLocationButton={false}
         >
           {originMarker && (
             <>
@@ -360,26 +512,38 @@ export default function CctvMaps() {
             />
           ))}
         </MapView>
-
-        <View
-          style={styles.carouselContainer}
-        >
-          <Carousel
-            ref={carouselRef}
-            data={cameraMarkers}
-            renderItem={renderCarouselItem}
-            width={Dimensions.get('window').width}
-            height={ITEM_HEIGHT}
-            loop={false}
-            pagingEnabled={true}
-            onSnapToItem={setSelectedMarkerIndex}
-            mode='parallax'
-            windowSize={5}
-            initialNumToRender={5}
-            maxToRenderPerBatch={5}
-            removeClippedSubviews={true}
-          />
-        </View>
+        {showSearchInNewRegionButton && (
+          <TouchableOpacity style={styles.floatingButton} onPress={searchInNewRegion}>
+            <Button mode="contained">Search in this area</Button>
+          </TouchableOpacity>
+        )}
+        {showSetToUserLocationButton && (
+          <TouchableOpacity style={[styles.floatingButton, styles.userLocationButton]} onPress={setToUserLocation}>
+            <Button mode="contained">Set to my location</Button>
+          </TouchableOpacity>
+        )}
+        { cameraMarkers.length === 0 || isSearching ?
+        null :
+          <View
+            style={styles.carouselContainer}
+          >
+            <Carousel
+              ref={carouselRef}
+              data={cameraMarkers}
+              renderItem={renderCarouselItem}
+              width={Dimensions.get('window').width}
+              height={ITEM_HEIGHT}
+              loop={false}
+              pagingEnabled={true}
+              onSnapToItem={setSelectedMarkerIndex}
+              mode='parallax'
+              windowSize={5}
+              initialNumToRender={5}
+              maxToRenderPerBatch={5}
+              removeClippedSubviews={true}
+            />
+          </View>
+        }
       </View>
     </SafeAreaView>
   )
@@ -414,4 +578,14 @@ const styles = StyleSheet.create({
     width: '95%',
     marginHorizontal: 10,
   },
+  floatingButton: {
+    position: 'absolute',
+    top: 120, // Adjust as needed
+    alignSelf: 'center',
+    zIndex: 1,
+  },
+  userLocationButton: {
+    top: 180, // Adjust as needed
+  },
+
 });
