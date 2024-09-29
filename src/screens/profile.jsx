@@ -1,53 +1,82 @@
-import { Text, useTheme, TextInput, RadioButton, } from "react-native-paper";
+import { Text, useTheme } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
-import { View, StyleSheet } from "react-native";
-import React from 'react';
-import { Appbar, Avatar } from 'react-native-paper';
+import {View, StyleSheet, ActivityIndicator} from "react-native";
+import React, {useEffect} from 'react';
+import { Avatar } from 'react-native-paper';
 import { useState } from "react";
 import UserInfo from "../components/UserInfo";
-import CameraInfo from "../components/CameraInfo";
+import * as SecureStore from 'expo-secure-store';
 
 export default function Profile() {
   const theme = useTheme();
   const navigation = useNavigation();
-  const [userName, setUserName] = useState("John Doe");
-  const [officerId, setOfficerId] = useState("1234");
+  const [name, setName] = useState(null);
+  const [email, setEmail] = useState(null);
+  const [phone, setPhone] = useState(null);
+  const [id, setId] = useState(null);
+  const [rank, setRank] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if(loading) {
+      setAllFields()
+        .then(() => setLoading(false))
+    }
+  }, []);
+
+  const setAllFields = async () => {
+    const tempName = await SecureStore.getItemAsync('userOfficerName');
+    const tempId = await SecureStore.getItemAsync('userOfficerId');
+    const tempEmail = await SecureStore.getItemAsync('userOfficerEmail');
+    const tempPhone = await SecureStore.getItemAsync('userOfficerPhone');
+    const tempRank = await SecureStore.getItemAsync('userOfficerRank');
+    setName(tempName);
+    setId(tempId);
+    setEmail(tempEmail);
+    setPhone(tempPhone);
+    setRank(tempRank);
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <View
-        style={{
-          display: "flex",
-          alignItems: "center",
-        }}
-      >
-        <View
-          style={{
-            paddingTop: 20,
-          }}
-        >
-          <Avatar.Icon size={64} icon="account" style={{backgroundColor: "#545454"}} color="white" />
-        </View>
-          <Text
-            variant="headlineMedium"
+      { loading ?
+        <ActivityIndicator size="large" color={theme.colors.primary} /> :
+        <>
+          <View
             style={{
-              paddingTop: 20,
+              display: "flex",
+              alignItems: "center",
             }}
           >
-            {userName}
-          </Text>
-      </View>
-        <View
-          style={{
-            paddingTop: 10,
-            paddingStart: 18,
-          }}
-        >
-        <UserInfo title={"OFFICER ID"} info={"1234#"} />
-        <UserInfo title={"EMAIL"} info={"johndoe@gmail.com"} />
-        <UserInfo title={"PHONE"} info={"9999999999"} />
-        <UserInfo title={"RANK"} info={"DGP"} />
-        </View>
+            <View
+              style={{
+                paddingTop: 20,
+              }}
+            >
+              <Avatar.Icon size={64} icon="account" style={{backgroundColor: "#545454"}} color="white" />
+            </View>
+            <Text
+              variant="headlineMedium"
+              style={{
+                paddingTop: 20,
+              }}
+            >
+              {name}
+            </Text>
+          </View>
+          <View
+            style={{
+              paddingTop: 10,
+              paddingStart: 18,
+            }}
+          >
+            <UserInfo title={"OFFICER ID"} info={id} />
+            <UserInfo title={"EMAIL"} info={email} />
+            <UserInfo title={"PHONE"} info={phone} />
+            <UserInfo title={"RANK"} info={rank} />
+          </View>
+        </>
+      }
     </View>
   )
 }

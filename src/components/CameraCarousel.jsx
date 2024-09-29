@@ -4,33 +4,6 @@ import Carousel from 'react-native-reanimated-carousel';
 import CameraInfoCard from './CameraInfoCard';
 
 export default function CameraCarousel() {
-    const dummyData = [
-        {
-            id: 1,
-            location: "Manveers kitchen/Forget me not Dhawalkhazan Agonda",
-            private_govt: "private",
-            owner: "Manveer Singh",
-            contact: "8806754026",
-            status: "working",
-        },
-        {
-            id: 2,
-            location: "Manveers kitchen/Forget me not Dhawalkhazan Agonda",
-            private_govt: "private",
-            owner: "Manveer Singh",
-            contact: "8806754026",
-            status: "working",
-        },
-        {
-            id: 3,
-            location: "Manveers kitchen/Forget me not Dhawalkhazan Agonda",
-            private_govt: "private",
-            owner: "Manveer Singh",
-            contact: "8806754026",
-            status: "working",
-        },
-    ]
-
     const width = Dimensions.get('window').width;
     return (
         <View>

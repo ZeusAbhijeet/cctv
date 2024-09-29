@@ -15,6 +15,11 @@ export default function LogoutAction() {
         ToastAndroid.show("Logged out",  ToastAndroid.SHORT);
         // ToastAndroid.show("Logged out.", ToastAndroid.LONG);
         SecureStore.setItem('userToken', '');
+        SecureStore.setItem('userOfficerName', '')
+        SecureStore.setItem('userOfficerId', '');
+        SecureStore.setItem('userOfficerEmail', '');
+        SecureStore.setItem('userOfficerPhone', '');
+        SecureStore.setItem('userOfficerRank', '');
         navigation.replace('login');
       })
       .catch((error) => {

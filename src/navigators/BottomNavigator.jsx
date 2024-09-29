@@ -6,6 +6,8 @@ import Profile from "../screens/profile";
 import CustomAppBar from "../components/CustomAppBar";
 import CCTVMapsStack from "./CCTVMapsStack";
 import ProfileStack from "./ProfileStack";
+import Tickets from "../screens/Tickets";
+import TicketsStack from "./TicketsStack";
 
 const BottomNavigator = createMaterialBottomTabNavigator();
 export default function BottomTabNavigator() {
@@ -30,6 +32,20 @@ export default function BottomTabNavigator() {
             />
           ),
           headerShown: true,
+        }}
+      />
+      <BottomNavigator.Screen
+        name='AddCameraScreen'
+        component={TicketsStack}
+        options={{
+          tabBarLabel: 'Add Camera',
+          tabBarIcon: ({color, size}) => (
+            <MaterialCommunityIcons
+              name="video-plus"
+              size={26}
+              color={color}
+            />
+          )
         }}
       />
       <BottomNavigator.Screen

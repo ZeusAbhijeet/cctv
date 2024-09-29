@@ -54,6 +54,11 @@ export default function Login() {
       } else {
         const userData = querySnapshot.docs[0].data();
         console.log('User data:', userData);
+        await SecureStore.setItemAsync('userOfficerName', userData.name)
+        await SecureStore.setItemAsync('userOfficerId', userData.officer_id);
+        await SecureStore.setItemAsync('userOfficerEmail', userData.email);
+        await SecureStore.setItemAsync('userOfficerPhone', userData.phone_number);
+        await SecureStore.setItemAsync('userOfficerRank', userData.rank);
       }
 
       // Navigation to MainScreen is now handled by the onAuthStateChanged listener
@@ -70,7 +75,13 @@ export default function Login() {
         style={[styles.container, { backgroundColor: theme.colors.background }]}
       >
         <View style={{ alignItems: 'center' }}>
-          <Text variant='displaySmall' style={styles.text}>
+          <Text variant='displaySmall' style={{margin: 2}}>
+            SurveilMap
+          </Text>
+          <Text variant='bodyLarge' style={{margin: 2}}>
+            Seamless Camera Discovery for Smarter Patrols
+          </Text>
+          <Text variant='headlineMedium' style={styles.text}>
             Login
           </Text>
         </View>
@@ -96,6 +107,7 @@ export default function Login() {
           />
           <Button
             mode='contained'
+            style={{marginTop: 15}}
             onPress={async () => {
               await handleLogin();
             }}

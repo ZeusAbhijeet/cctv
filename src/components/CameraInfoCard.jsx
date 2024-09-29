@@ -6,7 +6,7 @@ import CameraDetails from "../screens/CameraDetails";
 
 export default function CameraInfoCard({ cameraLocation, cameraClass, cameraOwner, cameraContactNo, cameraStatus, allData }) {
   const navigation = useNavigation();
-  console.log(allData)
+  //console.log(allData)
   return (
         <>
             <Card
