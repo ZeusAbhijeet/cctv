@@ -1,30 +1,53 @@
-import { Searchbar, useTheme, SegmentedButtons} from "react-native-paper";
+import {Searchbar, useTheme, SegmentedButtons} from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
-import { View, StyleSheet, ToastAndroid, Platform, PermissionsAndroid } from "react-native";
+import {View, StyleSheet, Dimensions, ToastAndroid, Platform, PermissionsAndroid, Alert} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import CameraCarousel from "../components/CameraCarousel";
-import {useEffect, useRef, useState} from "react";
-import MapView, {Marker, PROVIDER_GOOGLE} from "react-native-maps";
+import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import MapView, {Circle, Marker, PROVIDER_GOOGLE} from "react-native-maps";
 import {fromAddress} from "react-geocode";
 import Geolocation from '@react-native-community/geolocation'
+import CameraInfoCard from "../components/CameraInfoCard";
+import Carousel from "react-native-reanimated-carousel";
+import axios from 'axios';
+
+
+const ITEM_HEIGHT = Dimensions.get('window').width * 0.75;
+
 
 export default function CctvMaps() {
   const theme = useTheme();
   const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState("");
-  const [region, setRegion] = useState({
-    latitude: 15.048392,
-    longitude: 73.985453,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
-  });
+  const [region, setRegion] = useState(null);
   const [selectedRadius, setSelectedRadius] = useState(250);
+  const [cameraMarkers, setCameraMarkers] = useState([]);
+  const [selectedMarkerIndex, setSelectedMarkerIndex] = useState(0);
+  const [originMarker, setOriginMarker] = useState(null);
+  const [visibleMarkers, setVisibleMarkers] = useState([]);
+
 
   const mapRef = useRef(null);
+  const carouselRef = useRef(null);
 
   useEffect(() => {
     requestLocationPermission();
   }, []);
+
+  useEffect(() => {
+    if (cameraMarkers.length > 0 && mapRef.current) {
+      focusMarker(selectedMarkerIndex);
+    }
+  }, [selectedMarkerIndex, cameraMarkers]);
+
+  useEffect(() => {
+    if (region != null) {
+      fetchNearestCameraLocations();
+      setOriginMarker({
+        latitude: region.latitude,
+        longitude: region.longitude,
+      });
+    }
+  }, [region, selectedRadius]);
 
   const requestLocationPermission = async () => {
     if (Platform.OS === 'ios') {
@@ -71,7 +94,53 @@ export default function CctvMaps() {
       },
     );
   };
- 
+
+  const dummyData = [
+    {
+
+      location: "Manveers kitchen/Forget me not Dhawalkhazan Agonda",
+      private_govt: "private",
+      owner: "Manveer Singh",
+      contact: "8806754026",
+      status: "working",
+    },
+    {
+
+      location: "Manveers kitchen/Forget me not Dhawalkhazan Agonda",
+      private_govt: "private",
+      owner: "Manveer Singh",
+      contact: "8806754026",
+      status: "working",
+    },
+    {
+
+      location: "Manveers kitchen/Forget me not Dhawalkhazan Agonda",
+      private_govt: "private",
+      owner: "Manveer Singh",
+      contact: "8806754026",
+      status: "working",
+    },
+  ]
+  const [pagingEnabled, setPagingEnabled] = useState(true)
+  const width = Dimensions.get('window').width
+  // const renderItem = ({item}) => {
+  //   <Card
+  //     style={{
+  //       minHeight: "34%",
+  //       minWidth: "80%"
+  //     }}
+  //   >
+  //     <Card.Content>
+  //       <Text variant="titleMedium" style={styles.text}>{item.location}</Text>
+  //       <Text variant="bodyLarge" style={styles.text}>{item.private_govt}</Text>
+  //       <Text variant="bodyLarge" style={styles.text}>{item.owner}</Text>
+  //       <Text variant="bodyLarge" style={styles.text}>{item.contact}</Text>
+  //       <Text variant="bodyLarge" style={styles.text}>{item.status}</Text>
+  //     </Card.Content>
+  //   </Card>
+  // }
+
+
   const staticMarkers = [
     { coordinates: { latitude: 15.048392, longitude: 73.985453 } },
     { coordinates: { latitude: 15.04798, longitude: 73.985574 } },
@@ -225,19 +294,10 @@ export default function CctvMaps() {
         styles.container,
         {
           backgroundColor: theme.colors.background,
-          paddingHorizontal: 15,
         }
       ]
     }
     >
-      {/* <Searchbar
-        placeholder='Search'
-        onChangeText={(text) => setSearchQuery(text)}
-        value={searchQuery}
-        style={{
-          marginVertical: 10
-        }}
-      /> */}
       <View
         style={{
           flex: 1,
@@ -245,6 +305,7 @@ export default function CctvMaps() {
           minWidth: '100%',
           borderRadius: 15,
           alignItems: 'center',
+          justifyContent: 'center',
           marginVertical: 5,
         }}
       >
@@ -252,31 +313,21 @@ export default function CctvMaps() {
           placeholder='Search'
           onChangeText={(text) => setSearchQuery(text)}
           value={searchQuery}
-          style={{
-            marginHorizontal: 10,
-            marginVertical: 10,
-          }}
+          style={styles.searchbar}
           onSubmitEditing={searchLocation}
         />
         <SegmentedButtons
           value={selectedRadius}
           onValueChange={setSelectedRadius}
           buttons={radius}
-          style={{
-            marginBottom: 15,
-            marginHorizontal: 10,
-          }}
+          style={styles.segmentedButtons}
         />
         <MapView
           ref={mapRef}
           provider={PROVIDER_GOOGLE}
           initialRegion={region}
           region={region}
-          style={{
-            flex: 1,
-            alignSelf: 'stretch',
-            borderRadius: 15
-          }}
+          style={styles.map}
           userInterfaceStyle={theme.dark ? 'dark' : 'light'}
           showsUserLocation={true}
           loadingEnabled={true}
@@ -311,19 +362,23 @@ export default function CctvMaps() {
         </MapView>
 
         <View
-          style={{
-            opacity: 100,
-            borderRadius: 15,
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'absolute',
-            bottom: 0,
-            height: 250,
-            minWidth: '95%',
-            marginHorizontal: 10
-          }}
+          style={styles.carouselContainer}
         >
-          <CameraCarousel />
+          <Carousel
+            ref={carouselRef}
+            data={cameraMarkers}
+            renderItem={renderCarouselItem}
+            width={Dimensions.get('window').width}
+            height={ITEM_HEIGHT}
+            loop={false}
+            pagingEnabled={true}
+            onSnapToItem={setSelectedMarkerIndex}
+            mode='parallax'
+            windowSize={5}
+            initialNumToRender={5}
+            maxToRenderPerBatch={5}
+            removeClippedSubviews={true}
+          />
         </View>
       </View>
     </SafeAreaView>
@@ -333,7 +388,30 @@ export default function CctvMaps() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  content: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
   },
-})
+  searchbar: {
+    marginHorizontal: 10,
+    marginVertical: 10,
+  },
+  segmentedButtons: {
+    marginBottom: 15,
+    marginHorizontal: 10,
+  },
+  map: {
+    flex: 1,
+    alignSelf: 'stretch',
+    borderRadius: 15,
+  },
+  carouselContainer: {
+    position: 'absolute',
+    bottom: 0,
+    height: 250,
+    width: '95%',
+    marginHorizontal: 10,
+  },
+});
