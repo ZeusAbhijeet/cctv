@@ -20,7 +20,7 @@ const { height } = Dimensions.get("window");
 const Stack = createNativeStackNavigator();
 
 setDefaults({
-  key: "AIzaSyBN7WeAsX5Ya5BvLY_4AKQFklaDSBIPylU",
+  key: "YOUR_API_KEY_HERE",
   language: 'en',
   region: 'in'
 })
@@ -61,7 +61,7 @@ export default function App() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>  
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <PaperProvider theme={paperTheme}>
         <NavigationContainer>
             <SafeAreaProvider>
