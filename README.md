@@ -3,7 +3,7 @@
 - This application allows investigating officers to find CCTV cameras in the investigating area and navigate to them using Google Maps.
 - The application also allows ground officers to add, update or delete cameras from the database.
 
-**Companion Web Dashboard:** [ https://github.com/ZeusAbhijeet/cctv ]
+**Companion Web Dashboard:** [ https://github.com/Rinzler8x/cctv-admin ]
 
 **Backend API and Database:** [ https://github.com/TheLMNTRIX/Nearby-cctv-camera-detector ]
 
