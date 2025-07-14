@@ -24,7 +24,7 @@ export default function CameraDetails() {
       const reason = () => {
         return (reportReason === 'Other' ? otherReportText : reportReason);
       };
-      const response = await axios.post('http://10.70.13.203:8080/report', {
+      const response = await axios.post('http://192.168.237.101:8000/report', {
         "camera_id": route.params.data.cameraId,
         "location": route.params.data.title,
         "description": reason(),

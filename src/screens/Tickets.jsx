@@ -88,7 +88,7 @@ export default function Tickets() {
 
     const handleConfirm = async () => {
         try {
-            const response = await axios.post('http://10.70.13.203:8080/OnGroundCreateCamera', {
+            const response = await axios.post('http://192.168.237.101:8000/OnGroundCreateCamera', {
                 location: cameraLocation,
                 private_govt: cameraPrivateGovt,
                 owner_name: cameraOwner,

@@ -20,7 +20,7 @@ const { height } = Dimensions.get("window");
 const Stack = createNativeStackNavigator();
 
 setDefaults({
-  key: "YOUR_API_KEY_HERE",
+  key: "YOUR-API-KEY",
   language: 'en',
   region: 'in'
 })
@@ -97,6 +97,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center'
   },
-
-
 });

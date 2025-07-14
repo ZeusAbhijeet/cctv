@@ -48,10 +48,18 @@ export default function CctvMaps() {
   }, []);
 
   useEffect(() => {
-    if (cameraMarkers.length > 0 && mapRef.current && !isSearching) {
-      focusMarker(selectedMarkerIndex);
+    if (cameraMarkers.length > 0 && mapRef.current) {
+      // Automatically focus on the first camera when markers are loaded
+      focusMarker(0);
+      setSelectedMarkerIndex(0);
     } else if (cameraMarkers.length === 0 && selectedMarkerIndex > 0) {
       setSelectedMarkerIndex(0);
+    }
+  }, [cameraMarkers]);
+
+  useEffect(() => {
+    if (cameraMarkers.length > 0 && selectedMarkerIndex >= 0) {
+      focusMarker(selectedMarkerIndex);
     }
   }, [selectedMarkerIndex, cameraMarkers]);
 
@@ -63,7 +71,7 @@ export default function CctvMaps() {
       });
       fetchNearestCameraLocations();
     }
-  }, [region, selectedRadius]);
+  }, [region, selectedRadius]); // region, selectedRadius
 
   const requestLocationPermission = async () => {
     if (Platform.OS === 'ios') {
@@ -119,10 +127,9 @@ export default function CctvMaps() {
   }
 
   const fetchNearestCameraLocations = async () => {
-    const uri = "http://10.70.13.203:8080/nearby_cameras";
+    const uri = "http://192.168.237.101:8000/nearby_cameras";
     setCameraMarkers([]);
     setVisibleMarkers([]);
-    console.log(cameraMarkers);
 
     try {
       const response = await axios.post(uri, {
@@ -154,7 +161,6 @@ export default function CctvMaps() {
 
         setCameraMarkers(newCameraMarkers);
         setIsSearching(false);
-        // return newCameraMarkers;
       } else {
         throw new Error('Expected array response, got ' + typeof response.data);
       }
@@ -162,8 +168,6 @@ export default function CctvMaps() {
       console.error("Error fetching camera locations:", error);
 
       if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
         console.error("Response data:", error.response.data);
         console.error("Response status:", error.response.status);
         console.error("Response headers:", error.response.headers);
@@ -174,11 +178,9 @@ export default function CctvMaps() {
           ToastAndroid.show(`Server error: ${error.response.status}`, ToastAndroid.SHORT);
         }
       } else if (error.request) {
-        // The request was made but no response was received
         console.error("No response received:", error.request);
         ToastAndroid.show("No response from server", ToastAndroid.SHORT);
       } else {
-        // Something happened in setting up the request that triggered an Error
         console.error("Error setting up request:", error.message);
         ToastAndroid.show("Error setting up request", ToastAndroid.SHORT);
       }
@@ -274,7 +276,7 @@ export default function CctvMaps() {
     setVisibleMarkers([]);
     if (visibleRegion) {
       setRegion(visibleRegion);
-      fetchNearestCameraLocations();
+      //fetchNearestCameraLocations();
       setShowSearchInNewRegionButton(false);
     }
   };
@@ -291,7 +293,7 @@ export default function CctvMaps() {
       };
       setRegion(newRegion);
       mapRef.current.animateToRegion(newRegion, 1000);
-      fetchNearestCameraLocations();
+      //fetchNearestCameraLocations();
       setShowSetToUserLocationButton(false);
     }
   };

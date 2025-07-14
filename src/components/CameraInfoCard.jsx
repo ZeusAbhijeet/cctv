@@ -17,11 +17,11 @@ export default function CameraInfoCard({ cameraLocation, cameraClass, cameraOwne
                 onPress={() => {navigation.navigate('CameraDetails', {data: allData})}}
             >
                 <Card.Content>
-                    <Text variant="titleMedium" style={styles.text}>{cameraLocation}</Text>
-                    <Text variant="bodyLarge" style={styles.text}>{cameraClass}</Text>
-                    <Text variant="bodyLarge" style={styles.text}>{cameraOwner}</Text>
-                    <Text variant="bodyLarge" style={styles.text}>{cameraContactNo}</Text>
-                    <Text variant="bodyLarge" style={styles.text}>{cameraStatus}</Text>
+                    <Text variant="headlineMedium" style={styles.text}>{cameraLocation}</Text>
+                    <Text variant="titleMedium" style={styles.text}>{cameraClass}</Text>
+                    <Text variant="titleMedium" style={styles.text}>{cameraOwner}</Text>
+                    <Text variant="titleMedium" style={styles.text}>{cameraContactNo}</Text>
+                    <Text variant="titleMedium" style={styles.text}>{cameraStatus}</Text>
                 </Card.Content>
             </Card>
         </>
