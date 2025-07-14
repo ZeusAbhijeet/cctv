@@ -3,7 +3,11 @@
 - This application allows investigating officers to find CCTV cameras in the investigating area and navigate to them using Google Maps.
 - The application also allows ground officers to add, update or delete cameras from the database.
 
-### Tech Stack: React Native, Firebase.
+**Companion Web Dashboard:** [ https://github.com/ZeusAbhijeet/cctv ]
+
+**Backend API and Database:** [ https://github.com/TheLMNTRIX/Nearby-cctv-camera-detector ]
+
+**Tech Stack:** React Native, Firebase.
 
 ## Prerequisites
 
